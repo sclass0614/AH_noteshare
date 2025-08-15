@@ -288,6 +288,8 @@ body {
     box-shadow: var(--card-shadow);
 }
 
+
+
 /* 노트 카드 */
 .note-card {
     background-color: white;

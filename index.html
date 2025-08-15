@@ -352,12 +352,12 @@
 
       function initializeDateRange() {
         const today = getKoreaDateString();
-        const thirtyDaysAgo = getKoreaDateString(getDateDaysAgo(30));
+        const twoWeeksAgo = getKoreaDateString(getDateDaysAgo(14));
         
-        currentDateRange.startDate = thirtyDaysAgo;
+        currentDateRange.startDate = twoWeeksAgo;
         currentDateRange.endDate = today;
         
-        return { startDate: thirtyDaysAgo, endDate: today };
+        return { startDate: twoWeeksAgo, endDate: today };
       }
 
       // 직원 정보 초기화 및 캐싱
@@ -1563,7 +1563,7 @@
 
        // 검색 초기화
        function resetSearch() {
-         // 날짜 범위를 기본값(30일 전~오늘)으로 재설정
+         // 날짜 범위를 기본값(2주 전~오늘)으로 재설정
          const dateRange = initializeDateRange();
          document.getElementById('searchStartDate').value = dateRange.startDate;
          document.getElementById('searchEndDate').value = dateRange.endDate;

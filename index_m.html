@@ -272,12 +272,12 @@
 
       function initializeDateRange() {
         const today = getKoreaDateString();
-        const thirtyDaysAgo = getKoreaDateString(getDateDaysAgo(30));
+        const twoWeeksAgo = getKoreaDateString(getDateDaysAgo(14));
         
-        currentDateRange.startDate = thirtyDaysAgo;
+        currentDateRange.startDate = twoWeeksAgo;
         currentDateRange.endDate = today;
         
-        return { startDate: thirtyDaysAgo, endDate: today };
+        return { startDate: twoWeeksAgo, endDate: today };
       }
 
       // 직원 정보 초기화 및 캐싱
@@ -657,9 +657,19 @@
             </div>
           `;
           
-          // 카드 클릭 이벤트
-          noteCard.addEventListener('click', () => {
+          // 카드 더블클릭 이벤트 (모바일에서 실수 클릭 방지)
+          noteCard.addEventListener('dblclick', () => {
             selectNoteForEdit(note);
+          });
+
+          // 싱글 터치/클릭 시 선택 표시만
+          noteCard.addEventListener('click', () => {
+            // 기존 선택 해제
+            document.querySelectorAll('.note-card').forEach(card => {
+              card.classList.remove('selected');
+            });
+            // 현재 카드 선택 표시
+            noteCard.classList.add('selected');
           });
           
           container.appendChild(noteCard);
@@ -1078,7 +1088,7 @@
 
       // 검색 초기화
       function resetSearch() {
-        const dateRange = initializeDateRange();
+        const dateRange = initializeDateRange(); // 2주 범위로 초기화
         document.getElementById('searchStartDate').value = dateRange.startDate;
         document.getElementById('searchEndDate').value = dateRange.endDate;
         
@@ -1279,6 +1289,8 @@
       // 기존 alert와 confirm을 커스텀 모달로 대체
       window.alert = customAlert;
       window.confirm = customConfirm;
+
+
 
       // 부드러운 스크롤을 아래로 내리는 함수
       function scrollToBottomSmooth() {
