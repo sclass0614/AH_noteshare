@@ -34,31 +34,39 @@
                      <!-- 검색 영역 -->
            <div class="search-section">
              <div class="search-controls">
-               <!-- 첫 번째 줄 -->
+               <!-- 첫 번째 줄: 날짜 범위 -->
                <div class="search-row">
                  <div class="search-field">
-                   <label>노트날짜:</label>
-                   <input type="date" id="searchDate" placeholder="날짜 선택">
+                   <label>시작일:</label>
+                   <input type="date" id="searchStartDate" placeholder="시작일 선택">
                  </div>
                  <div class="search-field">
-                   <label>태그:</label>
-                   <input type="text" id="searchTag" placeholder="태그 검색">
+                   <label>종료일:</label>
+                   <input type="date" id="searchEndDate" placeholder="종료일 선택">
                  </div>
                </div>
                
                <!-- 두 번째 줄 -->
                <div class="search-row">
                  <div class="search-field">
+                   <label>태그:</label>
+                   <input type="text" id="searchTag" placeholder="태그 검색">
+                 </div>
+                 <div class="search-field">
                    <label>노트내용:</label>
                    <input type="text" id="searchContent" placeholder="내용 검색">
                  </div>
+               </div>
+               
+               <!-- 세 번째 줄 -->
+               <div class="search-row">
                  <div class="search-field">
                    <label>직원명:</label>
                    <input type="text" id="searchAuthor" placeholder="직원명 검색">
                  </div>
                </div>
                
-               <!-- 세 번째 줄: 공개여부 필터 및 버튼 -->
+               <!-- 네 번째 줄: 공개여부 필터 및 버튼 -->
                <div class="search-row">
                  <div class="privacy-filter">
                    <label>보기:</label>
@@ -332,6 +340,45 @@
       // 직원 정보 캐시
       let employeesCache = null;
       let employeesCacheLoaded = false;
+      
+      // 날짜 필터 관련 변수
+      let cachedNotes = []; // 서버에서 가져온 원본 데이터
+      let currentDateRange = { startDate: '', endDate: '' }; // 현재 설정된 날짜 범위
+
+      // 한국 시간 기준 날짜 유틸리티 함수들
+      function getKoreaDate() {
+        const now = new Date();
+        const koreaOffset = 9 * 60; // UTC+9 (분 단위)
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const koreaTime = new Date(utc + (koreaOffset * 60000));
+        return koreaTime;
+      }
+
+      function getKoreaDateString(date = null) {
+        const koreaDate = date || getKoreaDate();
+        return koreaDate.toISOString().split('T')[0]; // yyyy-mm-dd 형식
+      }
+
+      function getKoreaDateStringForDB(date = null) {
+        const dateStr = getKoreaDateString(date);
+        return dateStr.replace(/-/g, ''); // yyyymmdd 형식
+      }
+
+      function getDateDaysAgo(days) {
+        const koreaDate = getKoreaDate();
+        koreaDate.setDate(koreaDate.getDate() - days);
+        return koreaDate;
+      }
+
+      function initializeDateRange() {
+        const today = getKoreaDateString();
+        const thirtyDaysAgo = getKoreaDateString(getDateDaysAgo(30));
+        
+        currentDateRange.startDate = thirtyDaysAgo;
+        currentDateRange.endDate = today;
+        
+        return { startDate: thirtyDaysAgo, endDate: today };
+      }
 
       // 직원 정보 초기화 및 캐싱
       async function initializeEmployeesCache() {
@@ -534,7 +581,12 @@
         // 3. 현재 사용자 정보 설정
         await loadUserInfo();
         
-        // 노트 목록 로드
+        // 4. 날짜 범위 초기화 및 UI 설정
+        const dateRange = initializeDateRange();
+        document.getElementById('searchStartDate').value = dateRange.startDate;
+        document.getElementById('searchEndDate').value = dateRange.endDate;
+        
+        // 5. 노트 목록 로드
         await loadNotes();
 
         // 초기 설정
@@ -796,17 +848,93 @@
         }
       }
 
-             // 노트 목록 로드
-       async function loadNotes() {
-         try {
-           const privacyFilter = document.querySelector('input[name="privacyFilter"]:checked')?.value || 'public';
-           notes = await getNoteshareData(currentUser, privacyFilter);
-           displayNotes(notes);
-         } catch (error) {
-           console.error('노트 로드 실패:', error);
-           alert('노트를 불러오는데 실패했습니다.');
-         }
-       }
+                         // 노트 목록 로드 (날짜 범위 기반)
+      async function loadNotes() {
+        try {
+          console.log('=== 노트 목록 로드 시작 ===');
+          
+          // 날짜 범위가 설정되지 않았으면 초기화
+          if (!currentDateRange.startDate || !currentDateRange.endDate) {
+            initializeDateRange();
+          }
+          
+          console.log('날짜 범위:', currentDateRange);
+          console.log('현재 사용자:', currentUser);
+          
+          // 서버에서 날짜 범위와 권한 기반으로 데이터 조회
+          cachedNotes = await getNoteshareDataByDateRange(
+            currentUser, 
+            currentDateRange.startDate, 
+            currentDateRange.endDate
+          );
+          
+          console.log('서버에서 조회된 노트 수:', cachedNotes.length);
+          
+          // 현재 공개여부 필터 적용
+          const privacyFilter = document.querySelector('input[name="privacyFilter"]:checked')?.value || 'public';
+          const filteredNotes = applyPrivacyFilter(cachedNotes, privacyFilter);
+          
+          notes = filteredNotes;
+          displayNotes(notes);
+          
+          console.log('=== 노트 목록 로드 완료 ===');
+        } catch (error) {
+          console.error('노트 로드 실패:', error);
+          alert('노트를 불러오는데 실패했습니다.');
+        }
+      }
+
+      // 공개여부 필터 적용
+      function applyPrivacyFilter(notesList, privacyFilter) {
+        if (privacyFilter === 'public') {
+          return notesList.filter(note => note.공개여부 === 'Y');
+        } else {
+          // 전체 보기: 이미 서버에서 권한 기반으로 필터링됨
+          return notesList;
+        }
+      }
+
+      // 클라이언트 사이드 필터링 (태그, 내용, 직원명)
+      function applyClientSideFilters(notesList, filters) {
+        let filtered = [...notesList];
+        
+        // 태그 필터
+        if (filters.tag && filters.tag.trim()) {
+          const tagKeyword = filters.tag.trim().toLowerCase();
+          filtered = filtered.filter(note => 
+            note.태그 && note.태그.toLowerCase().includes(tagKeyword)
+          );
+        }
+        
+        // 노트내용 필터
+        if (filters.content && filters.content.trim()) {
+          const contentKeyword = filters.content.trim().toLowerCase();
+          filtered = filtered.filter(note => 
+            note.노트내용 && note.노트내용.toLowerCase().includes(contentKeyword)
+          );
+        }
+        
+        // 직원명 필터
+        if (filters.author && filters.author.trim()) {
+          const authorKeyword = filters.author.trim().toLowerCase();
+          filtered = filtered.filter(note => {
+            // DB에 저장된 직원명이 있으면 사용, 없으면 캐시에서 찾기
+            let authorName = note.직원명;
+            if (!authorName || authorName === note.직원번호) {
+              authorName = getEmployeeNameFromCache(note.직원번호);
+            }
+            return authorName && authorName.toLowerCase().includes(authorKeyword);
+          });
+        }
+        
+        return filtered;
+      }
+
+      // 날짜 범위가 변경되었는지 확인
+      function hasDateRangeChanged(newStartDate, newEndDate) {
+        return currentDateRange.startDate !== newStartDate || 
+               currentDateRange.endDate !== newEndDate;
+      }
 
       // 노트번호에서 마지막 번호만 추출
       function extractNoteSequence(noteNumber) {
@@ -924,35 +1052,62 @@
       }
 
              // 검색 수행
-       async function performSearch() {
-         const searchCriteria = {
-           date: document.getElementById('searchDate').value,
-           tag: document.getElementById('searchTag').value.trim(),
-           content: document.getElementById('searchContent').value.trim(),
-           author: document.getElementById('searchAuthor').value.trim(),
-           privacyFilter: document.querySelector('input[name="privacyFilter"]:checked').value
-         };
+             async function performSearch() {
+        const startDate = document.getElementById('searchStartDate').value;
+        const endDate = document.getElementById('searchEndDate').value;
+        const tag = document.getElementById('searchTag').value.trim();
+        const content = document.getElementById('searchContent').value.trim();
+        const author = document.getElementById('searchAuthor').value.trim();
+        const privacyFilter = document.querySelector('input[name="privacyFilter"]:checked').value;
 
-         // 검색 조건이 하나도 없으면 전체 조회
-         const hasSearchCriteria = searchCriteria.date || searchCriteria.tag || 
-                                  searchCriteria.content || searchCriteria.author;
-
-         try {
-           const searchResults = await searchNotesMultiple(searchCriteria, currentUser);
-           displayNotes(searchResults);
-         } catch (error) {
-           console.error('검색 실패:', error);
-           alert('검색에 실패했습니다.');
-         }
-       }
+        try {
+          // 날짜 범위가 변경된 경우 서버에서 새로 조회
+          if (hasDateRangeChanged(startDate, endDate)) {
+            console.log('날짜 범위 변경됨 - 서버에서 새로 조회');
+            
+            // 날짜 범위 업데이트
+            currentDateRange.startDate = startDate;
+            currentDateRange.endDate = endDate;
+            
+            // 서버에서 새로운 데이터 조회
+            cachedNotes = await getNoteshareDataByDateRange(currentUser, startDate, endDate);
+            console.log('새로 조회된 노트 수:', cachedNotes.length);
+          }
+          
+          // 공개여부 필터 적용
+          let filteredNotes = applyPrivacyFilter(cachedNotes, privacyFilter);
+          
+          // 클라이언트 사이드 필터 적용 (태그, 내용, 직원명)
+          const clientFilters = { tag, content, author };
+          filteredNotes = applyClientSideFilters(filteredNotes, clientFilters);
+          
+          console.log('최종 필터링된 노트 수:', filteredNotes.length);
+          
+          notes = filteredNotes;
+          displayNotes(notes);
+          
+        } catch (error) {
+          console.error('검색 실패:', error);
+          alert('검색에 실패했습니다.');
+        }
+      }
 
        // 검색 초기화
        function resetSearch() {
-         document.getElementById('searchDate').value = '';
+         // 날짜 범위를 기본값(30일 전~오늘)으로 재설정
+         const dateRange = initializeDateRange();
+         document.getElementById('searchStartDate').value = dateRange.startDate;
+         document.getElementById('searchEndDate').value = dateRange.endDate;
+         
+         // 기타 검색 조건 초기화
          document.getElementById('searchTag').value = '';
          document.getElementById('searchContent').value = '';
          document.getElementById('searchAuthor').value = '';
+         
+         // 기본 필터 설정
          document.querySelector('input[name="privacyFilter"][value="public"]').checked = true;
+         
+         // 노트 목록 다시 로드
          loadNotes();
        }
 
