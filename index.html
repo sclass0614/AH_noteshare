@@ -264,6 +264,15 @@
     <!-- 숨겨진 userInfo 요소 (parent page에서 사번 가져오기용) -->
     <div id="userInfo" style="display: none;"></div>
     
+    <!-- 임시 테스트용 직원번호 입력 (디버깅용) -->
+    <div id="debugUserInput" style="position: fixed; top: 10px; right: 10px; background: #f0f0f0; padding: 10px; border: 1px solid #ccc; border-radius: 5px; z-index: 9999; font-size: 12px;">
+      <strong>디버깅용 직원번호 설정:</strong><br>
+      <input type="text" id="debugEmpNo" placeholder="직원번호 입력 (예: s25001)" style="width: 120px; margin: 5px 0;">
+      <button onclick="setDebugUser()" style="margin-left: 5px;">설정</button>
+      <button onclick="clearDebugUser()" style="margin-left: 5px;">초기화</button>
+      <br><small>현재: <span id="currentUserDisplay">없음</span></small>
+    </div>
+    
     <!-- Parent 페이지용 헬퍼 스크립트 (Parent 페이지에서 이 코드를 추가하세요) -->
     <!--
     <script>
@@ -324,11 +333,94 @@
       let isEditMode = false;
       let isViewMode = false;
 
+      // 디버깅용 함수들
+      function setDebugUser() {
+        const empNo = document.getElementById('debugEmpNo').value.trim();
+        if (empNo) {
+          // sessionStorage에 저장
+          sessionStorage.setItem('currentUser', empNo);
+          sessionStorage.setItem('userInfo', empNo);
+          sessionStorage.setItem('empNo', empNo);
+          
+          // 현재 사용자 업데이트
+          currentUser = empNo;
+          updateCurrentUserDisplay();
+          
+          // 사용자 정보 다시 로드
+          loadUserInfo();
+          loadNotes();
+          
+          console.log('디버그 모드: 직원번호 설정됨:', empNo);
+          alert('직원번호가 설정되었습니다: ' + empNo);
+        }
+      }
+      
+      function clearDebugUser() {
+        sessionStorage.removeItem('currentUser');
+        sessionStorage.removeItem('userInfo');
+        sessionStorage.removeItem('empNo');
+        
+        currentUser = '';
+        updateCurrentUserDisplay();
+        
+        document.getElementById('debugEmpNo').value = '';
+        console.log('디버그 모드: 직원번호 초기화됨');
+        alert('직원번호가 초기화되었습니다');
+      }
+      
+      function updateCurrentUserDisplay() {
+        document.getElementById('currentUserDisplay').textContent = currentUser || '없음';
+      }
+      
+      // 전역 헬퍼 함수들 (브라우저 콘솔에서 사용 가능)
+      window.setUserManually = function(empNo) {
+        sessionStorage.setItem('currentUser', empNo);
+        sessionStorage.setItem('userInfo', empNo);
+        sessionStorage.setItem('empNo', empNo);
+        currentUser = empNo;
+        updateCurrentUserDisplay();
+        console.log('수동으로 사용자 설정됨:', empNo);
+        return '사용자가 설정되었습니다: ' + empNo;
+      };
+      
+      window.checkUserStatus = function() {
+        console.log('=== 현재 사용자 상태 ===');
+        console.log('currentUser 변수:', currentUser);
+        console.log('sessionStorage currentUser:', sessionStorage.getItem('currentUser'));
+        console.log('sessionStorage userInfo:', sessionStorage.getItem('userInfo'));
+        console.log('sessionStorage empNo:', sessionStorage.getItem('empNo'));
+        console.log('userInfo 요소:', document.getElementById('userInfo'));
+        console.log('userInfo textContent:', document.getElementById('userInfo')?.textContent);
+        
+        if (window.parent && window.parent !== window) {
+          try {
+            const parentUserInfo = window.parent.document.getElementById('userInfo');
+            console.log('parent userInfo 요소:', parentUserInfo);
+            console.log('parent userInfo textContent:', parentUserInfo?.textContent);
+            console.log('parent userInfo data-emp-no:', parentUserInfo?.getAttribute('data-emp-no'));
+          } catch (e) {
+            console.log('parent 접근 불가:', e.message);
+          }
+        }
+        
+        return {
+          currentUser,
+          sessionStorage: sessionStorage.getItem('currentUser'),
+          hasParent: window.parent !== window
+        };
+      };
+
       // parent page에서 사용자 정보 가져오기 함수
       async function getUserFromParent() {
+        console.log('=== 사용자 정보 가져오기 시작 ===');
+        
         try {
           // 방법 1: 현재 페이지의 userInfo 요소에서 가져오기
+          console.log('방법 1 시도: 현재 페이지 userInfo 요소');
           const userInfoElement = document.getElementById('userInfo');
+          console.log('userInfo 요소:', userInfoElement);
+          console.log('userInfo textContent:', userInfoElement ? userInfoElement.textContent : 'null');
+          
           if (userInfoElement && userInfoElement.textContent.trim()) {
             currentUser = userInfoElement.textContent.trim();
             console.log('방법 1 성공: userInfo 요소에서 가져옴', currentUser);
@@ -336,10 +428,20 @@
           }
 
           // 방법 2: parent window에서 직접 접근
+          console.log('방법 2 시도: parent window 접근');
+          console.log('window.parent:', window.parent);
+          console.log('window.parent === window:', window.parent === window);
+          
           if (window.parent && window.parent !== window) {
             try {
+              console.log('parent window 접근 시도...');
               const parentUserInfo = window.parent.document.getElementById('userInfo');
+              console.log('parent userInfo 요소:', parentUserInfo);
+              
               if (parentUserInfo) {
+                console.log('parent userInfo textContent:', parentUserInfo.textContent);
+                console.log('parent userInfo data-emp-no:', parentUserInfo.getAttribute('data-emp-no'));
+                
                 // data-emp-no 속성에서 먼저 시도
                 const empNoFromData = parentUserInfo.getAttribute('data-emp-no');
                 if (empNoFromData && empNoFromData.trim()) {
@@ -351,23 +453,34 @@
                 // textContent에서 직원번호 추출 시도
                 const textContent = parentUserInfo.textContent.trim();
                 if (textContent && !textContent.includes('로그인이 필요합니다')) {
+                  console.log('parent textContent 분석:', textContent);
                   // "S25001 님" 형식에서 직원번호 추출
                   const match = textContent.match(/([A-Za-z0-9]+)\s*님/);
+                  console.log('정규식 매치 결과:', match);
                   if (match) {
                     currentUser = match[1].toLowerCase();
                     console.log('방법 2-2 성공: parent textContent에서 가져옴', currentUser);
                     return;
                   }
                 }
+              } else {
+                console.log('parent userInfo 요소를 찾을 수 없음');
               }
             } catch (error) {
               console.log('방법 2 실패: parent window 접근 오류', error);
             }
+          } else {
+            console.log('iframe이 아니거나 parent window 없음');
           }
 
           // 방법 3: URL 파라미터에서 가져오기
+          console.log('방법 3 시도: URL 파라미터');
+          console.log('현재 URL:', window.location.href);
           const urlParams = new URLSearchParams(window.location.search);
+          console.log('URL 파라미터들:', Array.from(urlParams.entries()));
+          
           const userParam = urlParams.get('user') || urlParams.get('userId') || urlParams.get('empNo');
+          console.log('추출된 user 파라미터:', userParam);
           if (userParam) {
             currentUser = userParam.trim();
             console.log('방법 3 성공: URL 파라미터에서 가져옴', currentUser);
@@ -375,6 +488,11 @@
           }
 
           // 방법 4: sessionStorage에서 가져오기
+          console.log('방법 4 시도: sessionStorage');
+          console.log('sessionStorage userInfo:', sessionStorage.getItem('userInfo'));
+          console.log('sessionStorage currentUser:', sessionStorage.getItem('currentUser'));
+          console.log('sessionStorage empNo:', sessionStorage.getItem('empNo'));
+          
           const sessionUser = sessionStorage.getItem('userInfo') || sessionStorage.getItem('currentUser') || sessionStorage.getItem('empNo');
           if (sessionUser) {
             currentUser = sessionUser.trim();
@@ -383,6 +501,11 @@
           }
 
           // 방법 5: localStorage에서 가져오기
+          console.log('방법 5 시도: localStorage');
+          console.log('localStorage userInfo:', localStorage.getItem('userInfo'));
+          console.log('localStorage currentUser:', localStorage.getItem('currentUser'));
+          console.log('localStorage empNo:', localStorage.getItem('empNo'));
+          
           const localUser = localStorage.getItem('userInfo') || localStorage.getItem('currentUser') || localStorage.getItem('empNo');
           if (localUser) {
             currentUser = localUser.trim();
@@ -433,6 +556,9 @@
         await getUserFromParent();
         
         console.log('가져온 사용자 정보:', currentUser); // 디버깅용
+        
+        // 디버그 UI 업데이트
+        updateCurrentUserDisplay();
 
         // 직원 정보 가져오기
         await loadUserInfo();
