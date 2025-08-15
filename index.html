@@ -536,6 +536,39 @@
         }
       }
 
+      // 직원 유효성 검사 함수
+      function isValidEmployee(employeeNumber) {
+        if (!employeeNumber) {
+          console.log('❌ 직원번호가 없습니다.');
+          return false;
+        }
+
+        // 캐시가 로드되지 않았으면 false
+        if (!employeesCacheLoaded || !employeesCache) {
+          console.log('❌ 직원 정보 캐시가 로드되지 않았습니다.');
+          return false;
+        }
+
+        // admin과 s25001은 항상 유효
+        if (employeeNumber === 'admin' || employeeNumber === 's25001') {
+          console.log('✅ 관리자 계정:', employeeNumber);
+          return true;
+        }
+
+        // 직원명단에서 찾기
+        const employee = employeesCache.find(emp => 
+          emp.직원번호 && emp.직원번호.toLowerCase() === employeeNumber.toLowerCase()
+        );
+
+        if (employee) {
+          console.log('✅ 유효한 직원:', employeeNumber, '→', employee.직원명);
+          return true;
+        } else {
+          console.log('❌ 직원명단에 없는 직원번호:', employeeNumber);
+          return false;
+        }
+      }
+
       // parent page에서 사용자 정보 가져오기 함수
       async function getUserFromParent() {
         try {
@@ -759,6 +792,12 @@
         isViewMode = false;
         isEditMode = true;
         
+        console.log('🔧 수정 모드 진입:', {
+          selectedNoteId: selectedNoteId,
+          isEditMode: isEditMode,
+          isViewMode: isViewMode
+        });
+        
         // 헤더 텍스트 변경
         document.querySelector('.form-header h3').textContent = '노트 수정';
         
@@ -949,6 +988,14 @@
       async function loadNotes() {
         try {
           console.log('=== 노트 목록 로드 시작 ===');
+          
+          // 직원 유효성 검사 - 유효하지 않으면 서버 요청 중단
+          if (!isValidEmployee(currentUser)) {
+            console.log('🚫 직원명단에 없는 사용자입니다. 서버 요청을 중단합니다.');
+            cachedNotes = []; // 빈 배열로 설정
+            displayNotes(cachedNotes); // 빈 테이블 표시
+            return;
+          }
           
           // 날짜 범위가 설정되지 않았으면 초기화
           if (!currentDateRange.startDate || !currentDateRange.endDate) {
@@ -1379,6 +1426,14 @@
         const privacyFilter = document.querySelector('input[name="privacyFilter"]:checked').value;
 
         try {
+          // 직원 유효성 검사 - 유효하지 않으면 서버 요청 중단
+          if (!isValidEmployee(currentUser)) {
+            console.log('🚫 직원명단에 없는 사용자입니다. 검색을 중단합니다.');
+            cachedNotes = []; // 빈 배열로 설정
+            displayNotes(cachedNotes); // 빈 테이블 표시
+            return;
+          }
+
           // 날짜 범위가 변경된 경우 서버에서 새로 조회
           if (hasDateRangeChanged(startDate, endDate)) {
             console.log('날짜 범위 변경됨 - 서버에서 새로 조회');
@@ -1593,12 +1648,22 @@
         };
 
         try {
+          console.log('💾 저장 시작:', {
+            isEditMode: isEditMode,
+            selectedNoteId: selectedNoteId,
+            noteData: noteData
+          });
+
           let result;
           if (isEditMode && selectedNoteId) {
+            console.log('🔧 수정 모드로 updateNote 호출');
             result = await updateNote(selectedNoteId, noteData);
           } else {
+            console.log('✏️ 신규 작성 모드로 addNote 호출');
             result = await addNote(noteData);
           }
+
+          console.log('📊 서버 응답:', result);
 
           if (result.success) {
             alert(isEditMode ? '노트가 수정되었습니다.' : '노트가 저장되었습니다.');
@@ -1607,10 +1672,11 @@
               await resetMainForm(); // 새 작성 시에만 초기화
             }
           } else {
+            console.error('❌ 저장 실패:', result.error);
             alert('저장에 실패했습니다: ' + (result.error?.message || '알 수 없는 오류'));
           }
         } catch (error) {
-          console.error('저장 실패:', error);
+          console.error('💥 저장 중 예외 발생:', error);
           alert('저장 중 오류가 발생했습니다.');
         }
       }
