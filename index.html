@@ -8,11 +8,111 @@
     />
     <title>노트 공유 시스템</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=1.0" />
+    
+    <!-- GitHub Pages 호환성을 위한 기본 스타일 백업 -->
+    <style>
+      /* 기본 변수 */
+      :root {
+        --main-color: #235135;
+        --light-color: #e9f2ef;
+        --accent-color: #5a8f7b;
+        --border-color: #ddd;
+        --hover-color: #f5f5f5;
+        --text-color: #333;
+        --error-color: #e74c3c;
+        --success-color: #27ae60;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f8f9fa;
+        color: var(--text-color);
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+      }
+
+      .header {
+        background: linear-gradient(135deg, var(--main-color) 0%, var(--accent-color) 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .title {
+        font-size: 1.5rem;
+        font-weight: bold;
+      }
+
+      .main-content {
+        display: flex;
+        gap: 1rem;
+        height: calc(100vh - 120px);
+      }
+
+      .left-section, .right-section {
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      }
+
+      .left-section {
+        width: 60%;
+      }
+
+      .right-section {
+        width: 40%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* 외부 CSS가 로드되지 않을 경우를 위한 기본 스타일만 포함 */
+    </style>
+    
     <!-- Supabase JS 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <!-- 스크립트 파일 -->
     <script src="./supabase.js"></script>
+    
+    <!-- CSS 로드 상태 확인 스크립트 -->
+    <script>
+      // CSS 로드 확인
+      window.addEventListener('DOMContentLoaded', function() {
+        // styles.css가 로드되었는지 확인
+        const stylesheets = document.styleSheets;
+        let cssLoaded = false;
+        
+        for (let i = 0; i < stylesheets.length; i++) {
+          if (stylesheets[i].href && stylesheets[i].href.includes('styles.css')) {
+            cssLoaded = true;
+            console.log('✅ styles.css가 성공적으로 로드되었습니다.');
+            break;
+          }
+        }
+        
+        if (!cssLoaded) {
+          console.warn('⚠️ styles.css 로드 실패 - 내장 스타일로 대체됩니다.');
+          // 필요시 추가 처리
+        }
+      });
+    </script>
   </head>
   <body>
     <div class="container">
@@ -325,8 +425,55 @@
       let notes = [];
       let isEditMode = false;
       let isViewMode = false;
+      
+      // 직원 정보 캐시
+      let employeesCache = null;
+      let employeesCacheLoaded = false;
 
+      // 직원 정보 초기화 및 캐싱
+      async function initializeEmployeesCache() {
+        if (employeesCacheLoaded) {
+          return employeesCache;
+        }
+        
+        try {
+          console.log('직원 정보 로딩 중...');
+          employeesCache = await getEmployeesInfo();
+          employeesCacheLoaded = true;
+          console.log('직원 정보 로딩 완료:', employeesCache.length, '명');
+          return employeesCache;
+        } catch (error) {
+          console.error('직원 정보 로딩 실패:', error);
+          employeesCache = [];
+          employeesCacheLoaded = true;
+          return employeesCache;
+        }
+      }
 
+      // 캐시된 직원 정보에서 직원명 찾기
+      function getEmployeeNameFromCache(employeeNumber) {
+        if (!employeesCacheLoaded || !employeesCache) {
+          return employeeNumber; // 캐시가 로딩되지 않았으면 직원번호 반환
+        }
+        
+        const employee = employeesCache.find(emp => emp.직원번호 === employeeNumber);
+        return employee ? employee.직원명 : employeeNumber;
+      }
+
+      // 전체 직원 목록 가져오기 (캐시에서)
+      function getAllEmployeesFromCache() {
+        if (!employeesCacheLoaded || !employeesCache) {
+          return [];
+        }
+        return employeesCache;
+      }
+
+      // 직원 정보 캐시 새로고침
+      async function refreshEmployeesCache() {
+        employeesCacheLoaded = false;
+        employeesCache = null;
+        return await initializeEmployeesCache();
+      }
 
       // parent page에서 사용자 정보 가져오기 함수
       async function getUserFromParent() {
@@ -417,10 +564,13 @@
 
       // 페이지 로드 시 초기화
       document.addEventListener('DOMContentLoaded', async function() {
-        // parent page에서 사번 가져오기 (여러 방법 시도)
+        // 1. 직원 정보 캐시 초기화 (가장 먼저)
+        await initializeEmployeesCache();
+        
+        // 2. parent page에서 사번 가져오기
         await getUserFromParent();
 
-        // 직원 정보 가져오기
+        // 3. 현재 사용자 정보 설정
         await loadUserInfo();
         
         // 노트 목록 로드
@@ -637,15 +787,17 @@
         }
       }
 
-      // 직원 정보 로드
+      // 직원 정보 로드 (캐시 사용)
       async function loadUserInfo() {
         try {
-          const employees = await getEmployeesInfo();
-          const userEmployee = employees.find(emp => emp.직원번호 === currentUser);
+          // 캐시가 로딩되지 않았다면 먼저 로딩
+          if (!employeesCacheLoaded) {
+            await initializeEmployeesCache();
+          }
           
-          if (userEmployee) {
-            currentUserName = userEmployee.직원명;
-          } else {
+          // 캐시에서 직원명 찾기
+          currentUserName = getEmployeeNameFromCache(currentUser);
+          if (currentUserName === currentUser) {
             currentUserName = '알 수 없음';
           }
 
@@ -653,6 +805,9 @@
           document.getElementById('userEmployeeName').textContent = currentUserName;
         } catch (error) {
           console.error('직원 정보 로드 실패:', error);
+          currentUserName = '알 수 없음';
+          document.getElementById('userEmployeeNumber').textContent = currentUser;
+          document.getElementById('userEmployeeName').textContent = currentUserName;
         }
       }
 
@@ -687,10 +842,16 @@
           // 날짜 형식 변환 (yyyymmdd → yyyy-mm-dd)
           const displayDate = formatDateForInput(note.노트날짜 || '');
           
+          // 직원명 처리: 저장된 직원명이 없거나 직원번호와 같으면 캐시에서 찾기
+          let authorName = note.직원명;
+          if (!authorName || authorName === note.직원번호) {
+            authorName = getEmployeeNameFromCache(note.직원번호);
+          }
+          
           row.innerHTML = `
             <td class="col-category">${note.구분 || '-'}</td>
             <td class="col-date">${displayDate || '-'}</td>
-            <td class="col-author">${note.직원명 || '-'}</td>
+            <td class="col-author">${authorName || note.직원번호 || '-'}</td>
             <td class="col-number">${extractNoteSequence(note.노트번호)}</td>
             <td class="col-tag">${note.태그 || '-'}</td>
             <td class="col-content">${note.노트내용 || ''}</td>
