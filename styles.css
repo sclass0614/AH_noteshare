@@ -1,0 +1,1116 @@
+/*******************************************
+       * 1. 변수 및 기본 설정
+       *******************************************/
+/* 변수 정의 */
+:root {
+    --main-color: #235135;
+    /* 진한 초록색 */
+    --light-color: #e9f2ef;
+    /* 연한 민트색 */
+    --accent-color: #5a8f7b;
+    /* 중간 초록색 */
+    --border-color: #cccccc;
+    /* 회색 */
+    --button-color: #ededed;
+    /* 연한 회색 */
+    --hover-color: #f0f8ff;
+    /* 연한 파란색 */
+    --selected-color: #d4edda;
+    /* 선택된 행 색상 */
+    --danger-color: #dc3545;
+    /* 삭제 버튼 색상 */
+    --success-color: #28a745;
+    /* 성공 색상 */
+}
+
+/* 기본 리셋 및 전역 스타일 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: "맑은 고딕", "Malgun Gothic", sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+html {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    background-color: #f5f5f5;
+    padding: 0;
+    margin: 0;
+    font-size: 1rem;
+    height: 100vh;
+    min-width: 320px; /* 최소 너비 보장 */
+    overflow: hidden;
+    overflow-x: auto; /* 가로 스크롤 허용 */
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+}
+
+.container {
+    background-color: white;
+    width: 100%;
+    min-width: 800px; /* 전체 앱 최소 너비 보장 */
+    height: 100vh;
+    border: none;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    overflow-x: auto; /* 필요시 가로 스크롤 */
+}
+
+/*******************************************
+       * 2. 헤더 영역
+       *******************************************/
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--main-color);
+}
+
+.user-info {
+    font-size: 1rem;
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+/*******************************************
+       * 3. 메인 컨텐츠 영역
+       *******************************************/
+.main-content {
+    display: flex;
+    gap: 1rem;
+    height: calc(100vh - 100px);
+    overflow: hidden;
+    min-width: 0; /* flexbox 자식 요소 오버플로우 방지 */
+}
+
+/*******************************************
+       * 4. 좌측 섹션 (노트 목록)
+       *******************************************/
+.left-section {
+    width: 60%;
+    min-width: 400px; /* 좌측 섹션 최소 너비 */
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.search-section {
+    background-color: var(--light-color);
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.search-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.search-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 200px;
+}
+
+/* 직원명 검색과 보기 필터의 1:1 비율 설정 */
+.search-row:nth-child(3) .search-field {
+    flex: 1; /* 50% */
+}
+
+.search-row:nth-child(3) .privacy-filter {
+    flex: 1; /* 50% */
+}
+
+.search-field label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--main-color);
+    min-width: 70px;
+    flex-shrink: 0;
+}
+
+.search-field input {
+    flex: 1;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.privacy-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.privacy-filter label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--main-color);
+    min-width: 70px;
+}
+
+.search-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    width: 100%;
+}
+
+.search-buttons button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--accent-color);
+    color: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+    min-width: 70px;
+}
+
+.search-buttons button:hover {
+    background-color: var(--main-color);
+}
+
+.search-buttons button:nth-child(2) {
+    background-color: #6c757d;
+}
+
+.search-buttons button:nth-child(2):hover {
+    background-color: #5a6268;
+}
+
+.table-section {
+    flex: 1;
+    overflow: auto;
+    min-width: 0; /* flexbox에서 내용이 넘치는 문제 해결 */
+    position: relative; /* 스크롤 컨테이너 역할 */
+}
+
+#notesTable {
+    width: 100%;
+    min-width: 600px; /* 테이블 최소 너비 보장 */
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    table-layout: fixed;
+}
+
+#notesTable th {
+    background-color: var(--main-color);
+    color: white;
+    padding: 0.75rem 0.5rem;
+    text-align: left;
+    font-weight: 500;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    white-space: nowrap; /* 헤더 줄바꿈 방지 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 정렬 가능한 헤더 스타일 */
+#notesTable th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+#notesTable th.sortable:hover {
+    background-color: #1a365d; /* 더 어두운 색상 */
+}
+
+/* 정렬 화살표 스타일 */
+.sort-arrow {
+    display: inline-block;
+    font-size: 0.8rem;
+    margin-left: 0.3rem;
+    opacity: 0.7;
+}
+
+.sort-arrow.asc {
+    opacity: 1;
+    color: #ffd700; /* 금색 */
+}
+
+.sort-arrow.desc {
+    opacity: 1;
+    color: #ffd700; /* 금색 */
+}
+
+#notesTable td {
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: top;
+    white-space: nowrap; /* 셀 줄바꿈 방지 */
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#notesTable tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#notesTable tbody tr:hover {
+    background-color: var(--hover-color);
+}
+
+#notesTable tbody tr.selected {
+    background-color: var(--selected-color);
+}
+
+/* 컬럼별 너비 설정 */
+.col-category {
+    width: 8%;
+}
+
+.col-date {
+    width: 12%;
+}
+
+.col-author {
+    width: 10%;
+}
+
+.col-number {
+    width: 8%; /* 6%에서 8%로 확대 */
+    text-align: center;
+}
+
+.col-tag {
+    width: 15%; /* 12%에서 15%로 확대 */
+}
+
+.col-content {
+    width: 40%; /* 45%에서 40%로 조정 (다른 칼럼 확대로 인해) */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 0; /* table-layout: fixed와 함께 사용 */
+}
+
+.col-privacy {
+    width: 7%;
+    text-align: center;
+}
+
+/*******************************************
+       * 5. 우측 섹션 (상세보기)
+       *******************************************/
+.right-section {
+    width: 40%;
+    min-width: 350px; /* 우측 섹션 최소 너비 */
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* 불필요한 스타일들 제거 완료 */
+
+.action-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.add-btn {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.add-btn:hover {
+    background-color: #218838;
+}
+
+.edit-btn {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.edit-btn:hover:not(:disabled) {
+    background-color: var(--main-color);
+}
+
+.delete-btn {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.delete-btn:hover:not(:disabled) {
+    background-color: #c82333;
+}
+
+.action-btn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/*******************************************
+       * 6. 모달 스타일
+       *******************************************/
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background-color: var(--main-color);
+    color: white;
+    border-radius: 8px 8px 0 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.close {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.close:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--main-color);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+/* 특정 입력 필드들의 높이 조정 */
+.form-group input[type="date"],
+.form-group input[type="text"]:not(textarea),
+.tag-input-field {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(90, 143, 123, 0.2);
+}
+
+.tag-examples {
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tag-label {
+    font-size: 0.9rem;
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+.tag-example-btn {
+    padding: 0.3rem 0.8rem;
+    background-color: var(--light-color);
+    border: 1px solid var(--accent-color);
+    border-radius: 15px;
+    color: var(--accent-color);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.tag-example-btn:hover {
+    background-color: var(--accent-color);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.tag-example-btn:active {
+    transform: translateY(0);
+}
+
+.tag-example-btn:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border-color: #dee2e6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.tag-example-btn:disabled:hover {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    transform: none;
+}
+
+/* 라디오 버튼 스타일 */
+.radio-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+.radio-label input[type="radio"] {
+    margin-right: 0.3rem;
+    margin-left: 0;
+    width: auto;
+    padding: 0;
+    accent-color: var(--accent-color);
+}
+
+.radio-label:hover {
+    color: var(--accent-color);
+}
+
+.radio-label input[type="radio"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.radio-label input[type="radio"]:disabled + span {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 우측 섹션 스타일 */
+.write-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.form-header {
+    background-color: var(--light-color);
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: bold;
+    flex-shrink: 0;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+}
+
+.form-header h3 {
+    margin: 0;
+    color: var(--main-color);
+    font-size: 1.1rem;
+}
+
+/* 메인 폼 */
+.main-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 1.5rem;
+    min-height: 0;
+    gap: 1rem;
+}
+
+/* textarea 컨테이너 */
+.textarea-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    margin-bottom: 0;
+    min-height: 0;
+}
+
+.textarea-container label {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.textarea-container textarea {
+    flex: 1;
+    resize: none;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-family: inherit;
+    overflow-y: auto;
+    min-height: 80px;
+}
+
+/* 공개여부 컨테이너 */
+.privacy-container {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    background-color: #f8f9fa;
+    flex-shrink: 0;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+}
+
+.privacy-container .form-group {
+    margin-bottom: 0;
+}
+
+/* 버튼 섹션 */
+.button-section {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--light-color);
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    min-height: 60px;
+    align-items: center;
+}
+
+.main-form .form-group:not(.textarea-container) {
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+}
+
+.main-form .form-group:last-child {
+    margin-bottom: 0;
+}
+
+/* 메인 폼 입력 필드 높이 조정 */
+.main-form input[type="date"],
+.main-form input[type="text"]:not([id="mainContent"]) {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+}
+
+/* 비활성화된 폼 요소 스타일 */
+.main-form input:disabled,
+.main-form textarea:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.main-form input[readonly] {
+    background-color: #e9ecef;
+    cursor: default;
+}
+
+/* 버튼 추가 스타일 */
+.reset-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.reset-btn:hover {
+    background-color: #5a6268;
+}
+
+/* 인라인 폼 그룹 */
+.inline-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.inline-group label {
+    margin-bottom: 0;
+    min-width: 80px;
+    flex-shrink: 0;
+}
+
+/* 폼 행 레이아웃 */
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-col label {
+    margin-bottom: 0.5rem;
+}
+
+.form-col.inline-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+}
+
+.form-col.inline-group label {
+    margin-bottom: 0;
+    min-width: 80px;
+    flex-shrink: 0;
+}
+
+/* 태그 입력 래퍼 */
+.tag-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.tag-input-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.tag-input-row label {
+    margin-bottom: 0;
+    min-width: 80px;
+    flex-shrink: 0;
+}
+
+.tag-input-field {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+}
+
+.tag-input-field:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(90, 143, 123, 0.2);
+}
+
+.tag-chips {
+    display: none; /* 기본적으로 숨김, 태그가 있을 때만 표시 */
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+}
+
+.tag-chip {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    animation: chipSlideIn 0.2s ease-out;
+}
+
+@keyframes chipSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.tag-remove {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.tag-remove:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.save-btn {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.save-btn:hover {
+    background-color: #218838;
+}
+
+.cancel-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background-color: #5a6268;
+}
+
+/*******************************************
+       * 7. 반응형 디자인
+       *******************************************/
+@media (max-width: 1024px) {
+    /* 1024px 이하에서는 데스크톱 레이아웃 완전 유지 + 가로 스크롤만 추가 */
+    body {
+        overflow-x: auto; /* 페이지 전체 가로 스크롤 허용 */
+    }
+
+    .container {
+        min-width: 1025px; /* 데스크톱 너비 강제 유지 */
+    }
+
+    /* 나머지 모든 요소들은 데스크톱과 동일하게 유지 */
+    /* 반응형 속성 일절 적용하지 않음 */
+}
+
+@media (max-width: 768px) {
+    /* 768px 이하에서도 데스크톱 레이아웃 완전 유지 + 가로 스크롤만 추가 */
+    body {
+        overflow-x: auto; /* 페이지 전체 가로 스크롤 허용 */
+    }
+
+    .container {
+        min-width: 1025px; /* 데스크톱 너비 강제 유지 */
+        padding: 1rem; /* 원래 패딩 유지 */
+    }
+
+    /* 나머지 모든 요소들은 데스크톱과 동일하게 유지 */
+    /* 반응형 속성 일절 적용하지 않음 */
+}
+
+/*******************************************
+       * 8. 스크롤바 스타일
+       *******************************************/
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent-color);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--main-color);
+}
+
+/*******************************************
+       * 9. 기타 유틸리티 클래스
+       *******************************************/
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/*******************************************
+       * 10. 커스텀 모달 스타일
+       *******************************************/
+/* 커스텀 모달 오버레이 */
+.custom-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* 커스텀 모달 컨텐트 */
+.custom-modal-content {
+    background-color: white;
+    margin: 15% auto;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.3s ease-out;
+    overflow: hidden;
+}
+
+/* 모달 애니메이션 */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 커스텀 모달 헤더 */
+.custom-modal-header {
+    background: linear-gradient(135deg, var(--main-color), var(--accent-color));
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.custom-modal-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* 커스텀 모달 바디 */
+.custom-modal-body {
+    padding: 30px 20px;
+    text-align: center;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.alert-icon, .confirm-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.alert-icon {
+    color: var(--accent-color);
+}
+
+.confirm-icon {
+    color: #ffc107;
+}
+
+.custom-modal-body p {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #333;
+    word-break: keep-all;
+}
+
+/* 커스텀 모달 푸터 */
+.custom-modal-footer {
+    padding: 20px;
+    background-color: #f8f9fa;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* 커스텀 버튼 스타일 */
+.custom-btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 80px;
+}
+
+.custom-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.custom-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.primary-btn {
+    background: linear-gradient(135deg, var(--main-color), var(--accent-color));
+    color: white;
+}
+
+.primary-btn:hover {
+    background: linear-gradient(135deg, #1a3d28, #4a7a67);
+}
+
+.secondary-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.secondary-btn:hover {
+    background-color: #5a6268;
+}
+
+/* Alert 모달 특화 스타일 */
+.alert-modal .custom-modal-footer {
+    justify-content: center;
+}
+
+/* Confirm 모달 특화 스타일 */
+.confirm-modal .custom-modal-footer {
+    justify-content: space-between;
+}
+
+/* 모바일 대응 */
+@media (max-width: 480px) {
+    .custom-modal-content {
+        margin: 20% auto;
+        width: 95%;
+        max-width: none;
+    }
+    
+    .custom-modal-body {
+        padding: 20px 15px;
+    }
+    
+    .custom-btn {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        min-width: 70px;
+    }
+}
