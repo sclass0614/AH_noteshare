@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>노트 공유 시스템</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Supabase JS 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <!-- 스크립트 파일 -->
+    <script src="supabase.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <!-- 헤더 부분: 직원번호와 직원명 표시 -->
+      <div class="header" id="headerSection">
+        <div class="title">노트 공유 시스템</div>
+        <div class="user-info">
+          <span id="userEmployeeNumber">-</span> | <span id="userEmployeeName">-</span>
+        </div>
+      </div>
+
+      <!-- 메인 컨텐츠 영역 -->
+      <div class="main-content">
+        <!-- 좌측 섹션: 노트 목록 및 검색 -->
+        <div class="left-section">
+                     <!-- 검색 영역 -->
+           <div class="search-section">
+             <div class="search-controls">
+               <!-- 첫 번째 줄 -->
+               <div class="search-row">
+                 <div class="search-field">
+                   <label>노트날짜:</label>
+                   <input type="date" id="searchDate" placeholder="날짜 선택">
+                 </div>
+                 <div class="search-field">
+                   <label>태그:</label>
+                   <input type="text" id="searchTag" placeholder="태그 검색">
+                 </div>
+               </div>
+               
+               <!-- 두 번째 줄 -->
+               <div class="search-row">
+                 <div class="search-field">
+                   <label>노트내용:</label>
+                   <input type="text" id="searchContent" placeholder="내용 검색">
+                 </div>
+                 <div class="search-field">
+                   <label>직원명:</label>
+                   <input type="text" id="searchAuthor" placeholder="직원명 검색">
+                 </div>
+               </div>
+               
+               <!-- 세 번째 줄: 공개여부 필터 및 버튼 -->
+               <div class="search-row">
+                 <div class="privacy-filter">
+                   <label>보기:</label>
+                   <div class="radio-group">
+                     <label class="radio-label">
+                       <input type="radio" name="privacyFilter" value="public" checked>
+                       <span>공개만</span>
+                     </label>
+                     <label class="radio-label">
+                       <input type="radio" name="privacyFilter" value="all">
+                       <span>전체</span>
+                     </label>
+                   </div>
+                 </div>
+                 <div class="search-buttons">
+                   <button id="searchBtn">검색</button>
+                   <button id="resetBtn">초기화</button>
+                 </div>
+               </div>
+             </div>
+           </div>
+
+          <!-- 노트 목록 테이블 -->
+          <div class="table-section">
+            <table id="notesTable">
+              <thead>
+                <tr>
+                  <th class="col-category">구분</th>
+                  <th class="col-date">노트날짜</th>
+                  <th class="col-author">직원명</th>
+                  <th class="col-number">번호</th>
+                  <th class="col-tag">태그</th>
+                  <th class="col-content">노트내용</th>
+                  <th class="col-privacy">공개</th>
+                </tr>
+              </thead>
+              <tbody id="notesTableBody">
+                <!-- 동적으로 노트 목록이 들어갈 곳 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 우측 섹션: 노트 작성 및 편집 -->
+        <div class="right-section">
+          <!-- 노트 작성 폼 -->
+          <div class="write-form">
+            <div class="form-header">
+              <h3>노트 작성</h3>
+            </div>
+            
+            <form id="mainNoteForm" class="main-form">
+              <div class="form-group inline-group">
+                <label>구분:</label>
+                <div class="radio-group">
+                  <label class="radio-label">
+                    <input type="radio" name="category" value="전체" checked>
+                    <span>전체</span>
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" name="category" value="센터장">
+                    <span>센터장</span>
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" name="category" value="개인">
+                    <span>개인</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group form-row">
+                <div class="form-col inline-group">
+                  <label for="mainDate">노트날짜:</label>
+                  <input type="date" id="mainDate" required>
+                </div>
+                <div class="form-col inline-group">
+                  <label for="mainNumber">노트번호:</label>
+                  <input type="text" id="mainNumber" readonly>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div class="tag-input-wrapper">
+                  <div class="tag-input-row">
+                    <label for="mainTag">태그:</label>
+                    <input type="text" id="mainTag" class="tag-input-field" placeholder="태그를 입력하고 Enter를 누르세요">
+                    <input type="hidden" id="mainTagHidden">
+                  </div>
+                  <div class="tag-chips" id="mainTagChips"></div>
+                </div>
+                <div class="tag-examples">
+                  <span class="tag-label">예시 태그:</span>
+                  <button type="button" class="tag-example-btn" data-target="mainTag" data-tag="회원상담">회원상담</button>
+                  <button type="button" class="tag-example-btn" data-target="mainTag" data-tag="준비사항">준비사항</button>
+                  <button type="button" class="tag-example-btn" data-target="mainTag" data-tag="회원이슈">회원이슈</button>
+                  <button type="button" class="tag-example-btn" data-target="mainTag" data-tag="보호자요청">보호자요청</button>
+                </div>
+              </div>
+
+              <div class="form-group textarea-container">
+                <label for="mainContent">노트내용:</label>
+                <textarea id="mainContent" rows="8" required placeholder="노트 내용을 입력하세요"></textarea>
+              </div>
+            </form>
+
+            <!-- 공개여부 별도 컨테이너 -->
+            <div class="privacy-container">
+              <div class="form-group inline-group">
+                <label>공개여부:</label>
+                <div class="radio-group">
+                  <label class="radio-label">
+                    <input type="radio" name="privacy" value="Y" checked>
+                    <span>Y</span>
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" name="privacy" value="N">
+                    <span>N</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 버튼 영역 -->
+            <div class="button-section">
+              <button id="resetMainBtn" class="action-btn reset-btn">초기화</button>
+              <button id="saveMainBtn" class="action-btn save-btn">저장</button>
+              <button id="editMainBtn" class="action-btn edit-btn" disabled>수정</button>
+              <button id="deleteMainBtn" class="action-btn delete-btn" disabled>삭제</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 모달 창: 노트 입력/수정 -->
+    <div id="noteModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modalTitle">노트 입력</h3>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="noteForm">
+            <div class="form-group inline-group">
+              <label>구분:</label>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input type="radio" name="modalCategory" value="전체" checked>
+                  <span>전체</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="modalCategory" value="센터장">
+                  <span>센터장</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="modalCategory" value="개인">
+                  <span>개인</span>
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="modalDate">노트날짜:</label>
+              <input type="date" id="modalDate" required>
+            </div>
+            <div class="form-group">
+              <label for="modalNumber">노트번호:</label>
+              <input type="text" id="modalNumber" required>
+            </div>
+            <div class="form-group">
+              <label for="modalTag">태그:</label>
+              <input type="text" id="modalTag" placeholder="쉼표(,)로 구분하여 여러 태그 입력">
+              <div class="tag-examples">
+                <span class="tag-label">예시 태그:</span>
+                <button type="button" class="tag-example-btn" data-tag="회원상담">회원상담</button>
+                <button type="button" class="tag-example-btn" data-tag="준비사항">준비사항</button>
+                <button type="button" class="tag-example-btn" data-tag="회원이슈">회원이슈</button>
+                <button type="button" class="tag-example-btn" data-tag="보호자요청">보호자요청</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="modalContent">노트내용:</label>
+              <textarea id="modalContent" rows="10" required></textarea>
+            </div>
+            <div class="form-group inline-group" id="privacyGroup" style="display: none;">
+              <label>공개여부:</label>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input type="radio" name="modalPrivacy" value="Y" checked>
+                  <span>Y</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="modalPrivacy" value="N">
+                  <span>N</span>
+                </label>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="saveBtn" class="action-btn save-btn">저장</button>
+          <button type="button" id="cancelBtn" class="action-btn cancel-btn">취소</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 숨겨진 userInfo 요소 (parent page에서 사번 가져오기용) -->
+    <div id="userInfo" style="display: none;"></div>
+
+    <script>
+      // 전역 변수
+      let currentUser = '';
+      let currentUserName = '';
+      let selectedNoteId = null;
+      let notes = [];
+      let isEditMode = false;
+      let isViewMode = false;
+
+      // 페이지 로드 시 초기화
+      document.addEventListener('DOMContentLoaded', async function() {
+        // parent page에서 사번 가져오기
+        const userInfoElement = document.getElementById('userInfo');
+        if (userInfoElement && userInfoElement.textContent) {
+          currentUser = userInfoElement.textContent.trim();
+        } else {
+          // 테스트용 (실제 운영에서는 제거)
+          currentUser = 'test001';
+        }
+
+        // 직원 정보 가져오기
+        await loadUserInfo();
+        
+        // 노트 목록 로드
+        await loadNotes();
+
+        // 초기 설정
+        await initializeForm();
+
+        // 이벤트 리스너 등록
+        setupEventListeners();
+      });
+
+      // 초기 폼 설정
+      async function initializeForm() {
+        // 오늘 날짜 설정
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('mainDate').value = today;
+        
+        // 노트번호 자동 생성
+        await updateNoteNumber();
+        
+        // 작성 모드로 설정
+        setWriteMode();
+      }
+
+      // 작성 모드 설정
+      function setWriteMode() {
+        isViewMode = false;
+        isEditMode = false;
+        selectedNoteId = null;
+        
+        // 헤더 텍스트 변경
+        document.querySelector('.form-header h3').textContent = '노트 작성';
+        
+        // 버튼 상태 설정
+        document.getElementById('saveMainBtn').disabled = false;
+        document.getElementById('editMainBtn').disabled = true;
+        document.getElementById('deleteMainBtn').disabled = true;
+        
+        // 폼 활성화
+        setFormEnabled(true);
+        
+        // 테이블 선택 해제
+        document.querySelectorAll('#notesTableBody tr').forEach(row => {
+          row.classList.remove('selected');
+        });
+      }
+
+      // 조회 모드 설정
+      function setViewMode(note) {
+        isViewMode = true;
+        isEditMode = false;
+        selectedNoteId = note.id;
+        
+        // 헤더 텍스트 변경
+        document.querySelector('.form-header h3').textContent = '노트 조회';
+        
+        // 폼에 데이터 채우기
+        fillMainForm(note);
+        
+        // 버튼 상태 설정 (권한 확인)
+        const canEdit = note.직원번호 === currentUser || currentUser === 'admin' || currentUser === 's25001';
+        console.log('조회 모드 - 권한 확인:', {
+          noteAuthor: note.직원번호,
+          currentUser: currentUser,
+          canEdit: canEdit
+        });
+        
+        document.getElementById('saveMainBtn').disabled = true;
+        document.getElementById('editMainBtn').disabled = !canEdit;
+        document.getElementById('deleteMainBtn').disabled = !canEdit;
+        
+        console.log('버튼 활성화 상태:', {
+          saveBtn: !document.getElementById('saveMainBtn').disabled,
+          editBtn: !document.getElementById('editMainBtn').disabled,
+          deleteBtn: !document.getElementById('deleteMainBtn').disabled
+        });
+        
+        // 폼 활성화 (노트번호 제외)
+        setFormEnabled(true, true);
+      }
+
+      // 수정 모드 설정
+      function setEditMode() {
+        isViewMode = false;
+        isEditMode = true;
+        
+        // 헤더 텍스트 변경
+        document.querySelector('.form-header h3').textContent = '노트 수정';
+        
+        // 버튼 상태 설정
+        document.getElementById('saveMainBtn').disabled = false;
+        document.getElementById('editMainBtn').disabled = true;
+        document.getElementById('deleteMainBtn').disabled = true;
+        
+        // 폼 활성화 (노트번호는 비활성화 유지)
+        setFormEnabled(true);
+        document.getElementById('mainNumber').disabled = true;
+      }
+
+      // 폼 활성화/비활성화
+      function setFormEnabled(enabled, readOnlyMode = false) {
+        const formElements = document.querySelectorAll('#mainNoteForm input, #mainNoteForm textarea');
+        formElements.forEach(element => {
+          if (element.id === 'mainNumber') {
+            // 노트번호는 항상 비활성화
+            element.disabled = true;
+          } else if (readOnlyMode) {
+            // 조회 모드에서는 노트번호 제외하고 모두 활성화
+            element.disabled = false;
+          } else {
+            // 일반 모드
+            element.disabled = !enabled;
+          }
+        });
+        
+        // 라디오 버튼들
+        document.querySelectorAll('#mainNoteForm input[type="radio"]').forEach(radio => {
+          if (readOnlyMode) {
+            radio.disabled = false;
+          } else {
+            radio.disabled = !enabled;
+          }
+        });
+        
+        // 태그 예시 버튼들
+        document.querySelectorAll('.tag-example-btn[data-target="mainTag"]').forEach(btn => {
+          if (readOnlyMode) {
+            btn.disabled = false;
+          } else {
+            btn.disabled = !enabled;
+          }
+        });
+      }
+
+      // 날짜 형식 변환 함수 (yyyymmdd → yyyy-mm-dd)
+      function formatDateForInput(dateString) {
+        if (!dateString || dateString.length !== 8) return '';
+        const year = dateString.substring(0, 4);
+        const month = dateString.substring(4, 6);
+        const day = dateString.substring(6, 8);
+        return `${year}-${month}-${day}`;
+      }
+
+      // 날짜 형식 변환 함수 (yyyy-mm-dd → yyyymmdd)
+      function formatDateForStorage(dateString) {
+        if (!dateString) return '';
+        return dateString.replace(/-/g, '');
+      }
+
+      // 메인 폼에 데이터 채우기
+      function fillMainForm(note) {
+        // 구분 라디오 버튼
+        const categoryRadio = document.querySelector(`input[name="category"][value="${note.구분}"]`);
+        if (categoryRadio) categoryRadio.checked = true;
+        
+        // 날짜 (yyyymmdd → yyyy-mm-dd 형식으로 변환)
+        const formattedDate = formatDateForInput(note.노트날짜 || '');
+        document.getElementById('mainDate').value = formattedDate;
+        
+        // 노트번호
+        document.getElementById('mainNumber').value = note.노트번호 || '';
+        
+        // 태그 (칩 형태)
+        if (window.setTags_mainTag) {
+          window.setTags_mainTag(note.태그 || '');
+        }
+        
+        // 내용
+        document.getElementById('mainContent').value = note.노트내용 || '';
+        
+        // 공개여부 라디오 버튼
+        const privacyRadio = document.querySelector(`input[name="privacy"][value="${note.공개여부 || 'Y'}"]`);
+        if (privacyRadio) privacyRadio.checked = true;
+      }
+
+      // 메인 폼 초기화
+      async function resetMainForm() {
+        // 폼 리셋
+        document.getElementById('mainNoteForm').reset();
+        
+        // 기본값 설정
+        document.querySelector('input[name="category"][value="전체"]').checked = true;
+        document.querySelector('input[name="privacy"][value="Y"]').checked = true;
+        
+        // 오늘 날짜 설정
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('mainDate').value = today;
+        
+        // 태그 초기화
+        if (window.setTags_mainTag) {
+          window.setTags_mainTag('');
+        }
+        
+        // 노트번호 재생성
+        await updateNoteNumber();
+        
+        // 작성 모드로 전환
+        setWriteMode();
+      }
+
+      // 노트번호 업데이트
+      async function updateNoteNumber() {
+        const dateValue = document.getElementById('mainDate').value;
+        if (dateValue && currentUser) {
+          try {
+            // yyyy-mm-dd → yyyymmdd 형식으로 변환
+            const formattedDate = formatDateForStorage(dateValue);
+            const noteNumber = await generateNoteNumber(currentUser, formattedDate);
+            document.getElementById('mainNumber').value = noteNumber;
+          } catch (error) {
+            console.error('노트번호 생성 실패:', error);
+          }
+        }
+      }
+
+      // 직원 정보 로드
+      async function loadUserInfo() {
+        try {
+          const employees = await getEmployeesInfo();
+          const userEmployee = employees.find(emp => emp.직원번호 === currentUser);
+          
+          if (userEmployee) {
+            currentUserName = userEmployee.직원명;
+          } else {
+            currentUserName = '알 수 없음';
+          }
+
+          document.getElementById('userEmployeeNumber').textContent = currentUser;
+          document.getElementById('userEmployeeName').textContent = currentUserName;
+        } catch (error) {
+          console.error('직원 정보 로드 실패:', error);
+        }
+      }
+
+             // 노트 목록 로드
+       async function loadNotes() {
+         try {
+           const privacyFilter = document.querySelector('input[name="privacyFilter"]:checked')?.value || 'public';
+           notes = await getNoteshareData(currentUser, privacyFilter);
+           displayNotes(notes);
+         } catch (error) {
+           console.error('노트 로드 실패:', error);
+           alert('노트를 불러오는데 실패했습니다.');
+         }
+       }
+
+      // 노트번호에서 마지막 번호만 추출
+      function extractNoteSequence(noteNumber) {
+        if (!noteNumber) return '-';
+        const parts = noteNumber.split('-');
+        return parts.length > 0 ? parts[parts.length - 1] : '-';
+      }
+
+      // 노트 목록 표시
+      function displayNotes(notesToDisplay) {
+        const tbody = document.getElementById('notesTableBody');
+        tbody.innerHTML = '';
+
+        notesToDisplay.forEach(note => {
+          const row = document.createElement('tr');
+          row.setAttribute('data-note-id', note.id);
+          
+          // 날짜 형식 변환 (yyyymmdd → yyyy-mm-dd)
+          const displayDate = formatDateForInput(note.노트날짜 || '');
+          
+          row.innerHTML = `
+            <td class="col-category">${note.구분 || '-'}</td>
+            <td class="col-date">${displayDate || '-'}</td>
+            <td class="col-author">${note.직원명 || '-'}</td>
+            <td class="col-number">${extractNoteSequence(note.노트번호)}</td>
+            <td class="col-tag">${note.태그 || '-'}</td>
+            <td class="col-content">${note.노트내용 || ''}</td>
+            <td class="col-privacy">${note.공개여부 || 'Y'}</td>
+          `;
+          
+          // 더블클릭 이벤트 (조회 모드)
+          row.addEventListener('dblclick', () => {
+            selectNoteForView(note, row);
+          });
+          
+          tbody.appendChild(row);
+        });
+      }
+
+      // 노트 조회 모드로 선택
+      function selectNoteForView(note, row) {
+        // 테이블 행 선택 표시
+        document.querySelectorAll('#notesTableBody tr').forEach(r => {
+          r.classList.remove('selected');
+        });
+        row.classList.add('selected');
+
+        // 조회 모드로 전환
+        setViewMode(note);
+      }
+
+
+
+             // 이벤트 리스너 설정
+       function setupEventListeners() {
+         // 검색 기능
+         document.getElementById('searchBtn').addEventListener('click', performSearch);
+         document.getElementById('resetBtn').addEventListener('click', resetSearch);
+         
+         // 검색 입력 필드들의 Enter 키 이벤트
+         ['searchDate', 'searchTag', 'searchContent', 'searchAuthor'].forEach(id => {
+           const element = document.getElementById(id);
+           if (element) {
+             element.addEventListener('keypress', function(e) {
+               if (e.key === 'Enter') {
+                 performSearch();
+               }
+             });
+           }
+         });
+
+         // 공개여부 필터 변경 시 자동 검색
+         document.querySelectorAll('input[name="privacyFilter"]').forEach(radio => {
+           radio.addEventListener('change', performSearch);
+         });
+
+        // 메인 폼 버튼 이벤트
+        document.getElementById('saveMainBtn').addEventListener('click', saveMainNote);
+        document.getElementById('editMainBtn').addEventListener('click', () => setEditMode());
+        document.getElementById('deleteMainBtn').addEventListener('click', deleteMainNote);
+        document.getElementById('resetMainBtn').addEventListener('click', resetMainForm);
+
+        // 날짜 변경 시 노트번호 업데이트
+        document.getElementById('mainDate').addEventListener('change', updateNoteNumber);
+
+        // 태그 입력 이벤트
+        setupTagInput('mainTag', 'mainTagChips', 'mainTagHidden');
+
+        // 모달 이벤트 (기존 모달은 유지)
+        document.getElementById('saveBtn').addEventListener('click', saveNote);
+        document.getElementById('cancelBtn').addEventListener('click', closeModal);
+        document.querySelector('.close').addEventListener('click', closeModal);
+
+        // 태그 예시 버튼 이벤트 (모든 태그 버튼)
+        document.querySelectorAll('.tag-example-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const target = this.dataset.target || 'modalTag';
+            addTagFromExample(this.dataset.tag, target);
+          });
+        });
+
+        // 모달 외부 클릭시 닫기
+        window.addEventListener('click', function(event) {
+          const modal = document.getElementById('noteModal');
+          if (event.target === modal) {
+            closeModal();
+          }
+        });
+      }
+
+             // 검색 수행
+       async function performSearch() {
+         const searchCriteria = {
+           date: document.getElementById('searchDate').value,
+           tag: document.getElementById('searchTag').value.trim(),
+           content: document.getElementById('searchContent').value.trim(),
+           author: document.getElementById('searchAuthor').value.trim(),
+           privacyFilter: document.querySelector('input[name="privacyFilter"]:checked').value
+         };
+
+         // 검색 조건이 하나도 없으면 전체 조회
+         const hasSearchCriteria = searchCriteria.date || searchCriteria.tag || 
+                                  searchCriteria.content || searchCriteria.author;
+
+         try {
+           const searchResults = await searchNotesMultiple(searchCriteria, currentUser);
+           displayNotes(searchResults);
+         } catch (error) {
+           console.error('검색 실패:', error);
+           alert('검색에 실패했습니다.');
+         }
+       }
+
+       // 검색 초기화
+       function resetSearch() {
+         document.getElementById('searchDate').value = '';
+         document.getElementById('searchTag').value = '';
+         document.getElementById('searchContent').value = '';
+         document.getElementById('searchAuthor').value = '';
+         document.querySelector('input[name="privacyFilter"][value="public"]').checked = true;
+         loadNotes();
+       }
+
+      // 모달 열기
+      function openModal(editMode) {
+        isEditMode = editMode;
+        const modal = document.getElementById('noteModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const privacyGroup = document.getElementById('privacyGroup');
+
+        if (editMode) {
+          if (!selectedNoteId) {
+            alert('수정할 노트를 선택하세요.');
+            return;
+          }
+          modalTitle.textContent = '노트 수정';
+          fillFormWithSelectedNote();
+        } else {
+          modalTitle.textContent = '노트 입력';
+          clearForm();
+          // 오늘 날짜 기본값 설정
+          document.getElementById('modalDate').value = new Date().toISOString().split('T')[0];
+        }
+
+        // 공개여부 필드는 권한이 있는 사용자만 표시
+        if (hasPrivacyEditPermission(currentUser, editMode ? getSelectedNote()?.직원번호 : currentUser)) {
+          privacyGroup.style.display = 'block';
+        } else {
+          privacyGroup.style.display = 'none';
+        }
+
+        modal.style.display = 'block';
+      }
+
+      // 선택된 노트 정보로 폼 채우기
+      function fillFormWithSelectedNote() {
+        const note = getSelectedNote();
+        if (!note) return;
+
+        // 구분 라디오 버튼
+        const categoryRadio = document.querySelector(`input[name="modalCategory"][value="${note.구분 || '전체'}"]`);
+        if (categoryRadio) categoryRadio.checked = true;
+
+        document.getElementById('modalDate').value = note.노트날짜 || '';
+        document.getElementById('modalNumber').value = note.노트번호 || '';
+        document.getElementById('modalTag').value = note.태그 || '';
+        document.getElementById('modalContent').value = note.노트내용 || '';
+        
+        // 공개여부 라디오 버튼
+        const privacyRadio = document.querySelector(`input[name="modalPrivacy"][value="${note.공개여부 || 'Y'}"]`);
+        if (privacyRadio) privacyRadio.checked = true;
+      }
+
+      // 현재 선택된 노트 가져오기
+      function getSelectedNote() {
+        return notes.find(note => note.id === selectedNoteId);
+      }
+
+      // 폼 초기화
+      function clearForm() {
+        document.getElementById('noteForm').reset();
+        // 기본값 설정
+        document.querySelector('input[name="modalCategory"][value="전체"]').checked = true;
+        document.querySelector('input[name="modalPrivacy"][value="Y"]').checked = true;
+      }
+
+      // 모달 닫기
+      function closeModal() {
+        document.getElementById('noteModal').style.display = 'none';
+        clearForm();
+      }
+
+      // 노트 저장
+      async function saveNote() {
+        const form = document.getElementById('noteForm');
+        if (!form.checkValidity()) {
+          alert('모든 필수 항목을 입력하세요.');
+          return;
+        }
+
+        const noteData = {
+          직원번호: currentUser,
+          직원명: currentUserName,
+          구분: document.querySelector('input[name="modalCategory"]:checked').value,
+          노트날짜: document.getElementById('modalDate').value,
+          노트번호: document.getElementById('modalNumber').value,
+          태그: document.getElementById('modalTag').value,
+          노트내용: document.getElementById('modalContent').value,
+          공개여부: document.querySelector('input[name="modalPrivacy"]:checked').value
+        };
+
+        try {
+          let result;
+          if (isEditMode) {
+            result = await updateNote(selectedNoteId, noteData);
+          } else {
+            result = await addNote(noteData);
+          }
+
+          if (result.success) {
+            alert(isEditMode ? '노트가 수정되었습니다.' : '노트가 저장되었습니다.');
+            closeModal();
+            await loadNotes();
+          } else {
+            alert('저장에 실패했습니다: ' + (result.error?.message || '알 수 없는 오류'));
+          }
+        } catch (error) {
+          console.error('저장 실패:', error);
+          alert('저장 중 오류가 발생했습니다.');
+        }
+      }
+
+      // 선택된 노트 삭제
+      async function deleteSelectedNote() {
+        if (!selectedNoteId) {
+          alert('삭제할 노트를 선택하세요.');
+          return;
+        }
+
+        if (!confirm('정말로 삭제하시겠습니까?')) {
+          return;
+        }
+
+        try {
+          const result = await deleteNote(selectedNoteId);
+          if (result.success) {
+            alert('노트가 삭제되었습니다.');
+            selectedNoteId = null;
+            // 우측 패널 초기화
+            document.getElementById('detailCategory').textContent = '-';
+            document.getElementById('detailDate').textContent = '-';
+            document.getElementById('detailNumber').textContent = '-';
+            document.getElementById('detailTag').textContent = '-';
+            document.getElementById('contentDisplay').textContent = '노트를 선택하면 내용이 표시됩니다.';
+            document.getElementById('editBtn').disabled = true;
+            document.getElementById('deleteBtn').disabled = true;
+            
+            await loadNotes();
+          } else {
+            alert('삭제에 실패했습니다: ' + (result.error?.message || '알 수 없는 오류'));
+          }
+        } catch (error) {
+          console.error('삭제 실패:', error);
+          alert('삭제 중 오류가 발생했습니다.');
+        }
+      }
+
+      // 메인 폼 저장
+      async function saveMainNote() {
+        const form = document.getElementById('mainNoteForm');
+        if (!form.checkValidity()) {
+          alert('모든 필수 항목을 입력하세요.');
+          return;
+        }
+
+        const noteData = {
+          직원번호: currentUser,
+          직원명: currentUserName,
+          구분: document.querySelector('input[name="category"]:checked').value,
+          노트날짜: formatDateForStorage(document.getElementById('mainDate').value),
+          노트번호: document.getElementById('mainNumber').value,
+          태그: window.getTags_mainTag ? window.getTags_mainTag() : '',
+          노트내용: document.getElementById('mainContent').value,
+          공개여부: document.querySelector('input[name="privacy"]:checked').value
+        };
+
+        try {
+          let result;
+          if (isEditMode && selectedNoteId) {
+            result = await updateNote(selectedNoteId, noteData);
+          } else {
+            result = await addNote(noteData);
+          }
+
+          if (result.success) {
+            alert(isEditMode ? '노트가 수정되었습니다.' : '노트가 저장되었습니다.');
+            await loadNotes();
+            if (!isEditMode) {
+              await resetMainForm(); // 새 작성 시에만 초기화
+            }
+          } else {
+            alert('저장에 실패했습니다: ' + (result.error?.message || '알 수 없는 오류'));
+          }
+        } catch (error) {
+          console.error('저장 실패:', error);
+          alert('저장 중 오류가 발생했습니다.');
+        }
+      }
+
+      // 메인 폼 삭제
+      async function deleteMainNote() {
+        if (!selectedNoteId) {
+          alert('삭제할 노트를 선택하세요.');
+          return;
+        }
+
+        if (!confirm('정말로 삭제하시겠습니까?')) {
+          return;
+        }
+
+        try {
+          const result = await deleteNote(selectedNoteId);
+          if (result.success) {
+            alert('노트가 삭제되었습니다.');
+            await loadNotes();
+            await resetMainForm(); // 작성 모드로 복귀
+          } else {
+            alert('삭제에 실패했습니다: ' + (result.error?.message || '알 수 없는 오류'));
+          }
+        } catch (error) {
+          console.error('삭제 실패:', error);
+          alert('삭제 중 오류가 발생했습니다.');
+        }
+      }
+
+      // 태그 입력 설정
+      function setupTagInput(inputId, chipsId, hiddenId) {
+        const input = document.getElementById(inputId);
+        const chipsContainer = document.getElementById(chipsId);
+        const hiddenInput = document.getElementById(hiddenId);
+        
+        if (!input || !chipsContainer || !hiddenInput) return;
+
+        let tags = [];
+
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            addTagChip(input.value.trim());
+          } else if (e.key === 'Backspace' && input.value === '' && tags.length > 0) {
+            removeTagChip(tags.length - 1);
+          }
+        });
+
+        input.addEventListener('blur', function() {
+          if (input.value.trim()) {
+            addTagChip(input.value.trim());
+          }
+        });
+
+        function addTagChip(tagText) {
+          if (!tagText || tags.includes(tagText)) return;
+
+          tags.push(tagText);
+          input.value = '';
+          updateChipsDisplay();
+          updateHiddenInput();
+        }
+
+        function removeTagChip(index) {
+          tags.splice(index, 1);
+          updateChipsDisplay();
+          updateHiddenInput();
+        }
+
+        function updateChipsDisplay() {
+          chipsContainer.innerHTML = '';
+          if (tags.length > 0) {
+            tags.forEach((tag, index) => {
+              const chip = document.createElement('div');
+              chip.className = 'tag-chip';
+              chip.innerHTML = `
+                <span>${tag}</span>
+                <button type="button" class="tag-remove" onclick="removeTagByIndex(${index}, '${inputId}')">&times;</button>
+              `;
+              chipsContainer.appendChild(chip);
+            });
+            chipsContainer.style.display = 'flex';
+          } else {
+            chipsContainer.style.display = 'none';
+          }
+        }
+
+        function updateHiddenInput() {
+          hiddenInput.value = tags.join(', ');
+        }
+
+        // 전역 함수로 태그 제거 기능 노출
+        window[`removeTagByIndex_${inputId}`] = removeTagChip;
+        window.removeTagByIndex = function(index, targetInputId) {
+          if (targetInputId === inputId) {
+            removeTagChip(index);
+          }
+        };
+
+        // 태그 설정 함수
+        window[`setTags_${inputId}`] = function(tagString) {
+          tags = tagString ? tagString.split(',').map(t => t.trim()).filter(t => t) : [];
+          updateChipsDisplay();
+          updateHiddenInput();
+        };
+
+        // 태그 가져오기 함수
+        window[`getTags_${inputId}`] = function() {
+          return tags.join(', ');
+        };
+
+        // 초기화
+        updateChipsDisplay();
+      }
+
+      // 태그 예시에서 태그 추가
+      function addTagFromExample(tag, targetId = 'modalTag') {
+        if (targetId === 'mainTag') {
+          // 칩 형태 태그 추가
+          const input = document.getElementById(targetId);
+          input.value = tag;
+          const event = new KeyboardEvent('keydown', { key: 'Enter' });
+          input.dispatchEvent(event);
+        } else {
+          // 기존 방식 (모달)
+          const tagInput = document.getElementById(targetId);
+          const currentTags = tagInput.value.trim();
+          
+          const tagArray = currentTags ? currentTags.split(',').map(t => t.trim()) : [];
+          
+          if (!tagArray.includes(tag)) {
+            const newValue = currentTags ? currentTags + ', ' + tag : tag;
+            tagInput.value = newValue;
+          }
+          
+          tagInput.focus();
+        }
+      }
+    </script>
+  </body>
+</html>
