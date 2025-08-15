@@ -184,6 +184,8 @@ body {
     border-radius: 6px;
     font-size: 0.9rem;
     transition: border-color 0.2s;
+    height: 44px;
+    box-sizing: border-box;
 }
 
 .search-field input:focus {
@@ -450,6 +452,8 @@ body {
     font-size: 0.9rem;
     transition: border-color 0.2s;
     font-family: inherit;
+    height: 44px; /* 명시적 높이 지정 */
+    box-sizing: border-box;
 }
 
 .form-group input:focus,
@@ -540,6 +544,8 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 6px;
     font-size: 0.9rem;
+    height: 44px;
+    box-sizing: border-box;
 }
 
 .tag-chips {
@@ -644,6 +650,7 @@ body {
     flex: 1;
     resize: none;
     min-height: 120px;
+    height: auto; /* textarea는 자동 높이 */
     overflow-y: auto;
     font-family: "Noto Sans KR", "맑은 고딕", "Malgun Gothic", sans-serif;
     font-size: 0.85rem;
@@ -920,10 +927,11 @@ body {
     }
     
     .form-col input {
-    font-size: 0.9rem;
-    padding: 0.55rem 0.6rem;
-    height: auto;
-}
+        font-size: 0.9rem;
+        padding: 0.55rem 0.6rem;
+        height: 44px;
+        box-sizing: border-box;
+    }
     
     .action-btn {
         font-size: 0.7rem;
