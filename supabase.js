@@ -170,6 +170,27 @@ async function getEmployeesInfo() {
   }
 }
 
+// 특정 직원번호로 직원명을 가져오는 함수
+async function getEmployeeName(employeeNumber) {
+  try {
+    const { data, error } = await supabase
+      .from('employeesinfo')
+      .select('직원명')
+      .eq('직원번호', employeeNumber)
+      .single();
+    
+    if (error) {
+      console.error('직원명 조회 에러:', error);
+      return employeeNumber; // 조회 실패 시 직원번호 반환
+    }
+    
+    return data?.직원명 || employeeNumber;
+  } catch (error) {
+    console.error('직원명 조회 중 예외 발생:', error);
+    return employeeNumber; // 조회 실패 시 직원번호 반환
+  }
+}
+
 // 복수 조건 검색 함수
 async function searchNotesMultiple(searchCriteria, currentUserNumber) {
   try {
