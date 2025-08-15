@@ -50,6 +50,56 @@ async function getNoteshareData(currentUserNumber, privacyFilter = 'public') {
   }
 }
 
+// 날짜 범위와 권한 기반으로 노트를 가져오는 함수
+// 구분별 조회 규칙:
+// - 전체: 모든 직원이 볼 수 있음
+// - 개인: 작성자 본인만 볼 수 있음
+// - 센터장: 작성자 + 센터장(s25001) + admin만 볼 수 있음
+async function getNoteshareDataByDateRange(currentUserNumber, startDate, endDate) {
+  try {
+    // 날짜를 yyyymmdd 형식으로 변환
+    const startDateStr = startDate.replace(/-/g, '');
+    const endDateStr = endDate.replace(/-/g, '');
+    
+    console.log('날짜 범위 조회:', { currentUserNumber, startDateStr, endDateStr });
+    
+    let query = supabase
+      .from('noteshare')
+      .select('*')
+      .gte('노트날짜', startDateStr)
+      .lte('노트날짜', endDateStr)
+      .order('created_at', { ascending: false });
+
+    // 권한별 필터 적용
+    if (currentUserNumber === 'admin' || currentUserNumber === 's25001') {
+      // admin 또는 센터장(s25001) 권한
+      // - 전체: 모든 사람이 볼 수 있는 노트
+      // - 센터장: 모든 센터장 노트 (누가 작성했든)
+      // - 개인: s25001의 개인 노트만
+      query = query.or(`구분.eq.전체,구분.eq.센터장,and(구분.eq.개인,직원번호.eq.s25001)`);
+    } else {
+      // 일반 직원 권한
+      // - 전체: 모든 사람이 볼 수 있는 노트
+      // - 개인: 본인의 개인 노트만
+      // - 센터장: 본인이 작성한 센터장 노트만
+      query = query.or(`구분.eq.전체,and(구분.eq.개인,직원번호.eq.${currentUserNumber}),and(구분.eq.센터장,직원번호.eq.${currentUserNumber})`);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('날짜 범위 노트 조회 에러:', error);
+      return [];
+    }
+    
+    console.log('조회된 노트 수:', data?.length || 0);
+    return data || [];
+  } catch (error) {
+    console.error('날짜 범위 노트 조회 중 예외 발생:', error);
+    return [];
+  }
+}
+
 // 노트 검색 함수
 async function searchNotes(searchType, searchValue, currentUserNumber) {
   try {
