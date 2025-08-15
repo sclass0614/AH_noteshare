@@ -1280,6 +1280,41 @@
       window.alert = customAlert;
       window.confirm = customConfirm;
 
+      // 부드러운 스크롤을 아래로 내리는 함수
+      function scrollToBottomSmooth() {
+        try {
+          // 현재 활성화된 페이지 확인
+          const activePage = document.querySelector('.page.active');
+          if (!activePage) return;
+
+          // 편집 페이지인 경우에만 스크롤
+          if (activePage.id === 'editorPage') {
+            const textarea = document.getElementById('mainContent');
+            if (textarea) {
+              // 텍스트 영역을 화면에 보이도록 스크롤
+              textarea.scrollIntoView({
+                behavior: 'smooth',
+                block: 'end',
+                inline: 'nearest'
+              });
+
+              // 추가로 에디터 섹션도 아래로 스크롤
+              const editorSection = activePage.querySelector('.editor-section');
+              if (editorSection) {
+                setTimeout(() => {
+                  editorSection.scrollTo({
+                    top: editorSection.scrollHeight,
+                    behavior: 'smooth'
+                  });
+                }, 200);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('스크롤 이동 중 오류:', error);
+        }
+      }
+
       // 초기 폼 설정
       async function initializeForm() {
         const today = new Date().toISOString().split('T')[0];
@@ -1342,6 +1377,44 @@
             const target = this.dataset.target || 'mainTag';
             addTagFromExample(this.dataset.tag, target);
           });
+        });
+
+        // 노트내용 입력 필드 포커스 시 스크롤 이벤트
+        const mainContentTextarea = document.getElementById('mainContent');
+        if (mainContentTextarea) {
+          mainContentTextarea.addEventListener('focus', function() {
+            // 모바일 키보드가 올라온 후 스크롤 (iOS/Android 대응)
+            setTimeout(() => {
+              scrollToBottomSmooth();
+            }, 500);
+          });
+
+          // 입력 시작시에도 스크롤 (추가 보장)
+          mainContentTextarea.addEventListener('input', function() {
+            // 입력이 시작되면 한 번 더 스크롤 확인
+            if (this === document.activeElement) {
+              setTimeout(() => {
+                scrollToBottomSmooth();
+              }, 100);
+            }
+          });
+        }
+
+        // 뷰포트 크기 변경 감지 (모바일 키보드 대응)
+        let initialViewportHeight = window.innerHeight;
+        window.addEventListener('resize', function() {
+          // 키보드가 올라와서 뷰포트가 줄어든 경우
+          if (window.innerHeight < initialViewportHeight * 0.8) {
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement.id === 'mainContent') {
+              setTimeout(() => {
+                scrollToBottomSmooth();
+              }, 300);
+            }
+          } else {
+            // 키보드가 내려간 경우 초기 높이 업데이트
+            initialViewportHeight = window.innerHeight;
+          }
         });
       }
 
