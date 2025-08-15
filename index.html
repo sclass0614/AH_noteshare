@@ -344,6 +344,13 @@
           employeesCache = await getEmployeesInfo();
           employeesCacheLoaded = true;
           console.log('직원 정보 로딩 완료:', employeesCache.length, '명');
+          
+          // 디버깅: 첫 번째 직원 정보 확인
+          if (employeesCache.length > 0) {
+            console.log('첫 번째 직원 정보:', employeesCache[0]);
+            console.log('직원번호 필드명 확인:', Object.keys(employeesCache[0]));
+          }
+          
           return employeesCache;
         } catch (error) {
           console.error('직원 정보 로딩 실패:', error);
@@ -356,10 +363,34 @@
       // 캐시된 직원 정보에서 직원명 찾기
       function getEmployeeNameFromCache(employeeNumber) {
         if (!employeesCacheLoaded || !employeesCache) {
+          console.log('캐시가 로딩되지 않음:', { employeesCacheLoaded, employeesCache });
           return employeeNumber; // 캐시가 로딩되지 않았으면 직원번호 반환
         }
         
-        const employee = employeesCache.find(emp => emp.직원번호 === employeeNumber);
+        console.log('직원번호로 검색:', employeeNumber);
+        console.log('캐시에서 검색 중...');
+        
+        // 정확한 매칭 시도
+        let employee = employeesCache.find(emp => emp.직원번호 === employeeNumber);
+        
+        // 정확한 매칭 실패 시 대소문자 무시하고 시도
+        if (!employee) {
+          console.log('정확한 매칭 실패 - 대소문자 무시하고 재시도');
+          employee = employeesCache.find(emp => 
+            emp.직원번호 && emp.직원번호.toLowerCase() === employeeNumber.toLowerCase()
+          );
+        }
+        
+        // 공백 제거 후 시도
+        if (!employee) {
+          console.log('대소문자 매칭 실패 - 공백 제거 후 재시도');
+          const trimmedNumber = employeeNumber.trim();
+          employee = employeesCache.find(emp => 
+            emp.직원번호 && emp.직원번호.trim() === trimmedNumber
+          );
+        }
+        
+        console.log('최종 매칭 결과:', employee);
         return employee ? employee.직원명 : employeeNumber;
       }
 
@@ -377,6 +408,33 @@
         employeesCache = null;
         return await initializeEmployeesCache();
       }
+
+      // 디버깅용 전역 함수들
+      window.debugEmployeeCache = function() {
+        console.log('=== 직원 캐시 디버깅 ===');
+        console.log('현재 사용자:', currentUser);
+        console.log('캐시 로딩 상태:', employeesCacheLoaded);
+        console.log('캐시된 직원 수:', employeesCache ? employeesCache.length : 0);
+        
+        if (employeesCache && employeesCache.length > 0) {
+          console.log('전체 직원 목록:', employeesCache);
+          
+          // 현재 사용자 검색
+          const found = employeesCache.find(emp => emp.직원번호 === currentUser);
+          console.log('현재 사용자 검색 결과:', found);
+          
+          // s25001 검색
+          const s25001 = employeesCache.find(emp => emp.직원번호 === 's25001');
+          console.log('s25001 검색 결과:', s25001);
+        }
+        
+        return {
+          currentUser,
+          employeesCacheLoaded,
+          employeesCount: employeesCache ? employeesCache.length : 0,
+          employeesCache
+        };
+      };
 
       // parent page에서 사용자 정보 가져오기 함수
       async function getUserFromParent() {
@@ -693,19 +751,43 @@
       // 직원 정보 로드 (캐시 사용)
       async function loadUserInfo() {
         try {
+          console.log('=== 직원 정보 로드 시작 ===');
+          console.log('현재 사용자:', currentUser);
+          
           // 캐시가 로딩되지 않았다면 먼저 로딩
           if (!employeesCacheLoaded) {
+            console.log('직원 캐시가 로딩되지 않음 - 초기화 시작');
             await initializeEmployeesCache();
+          }
+          
+          console.log('직원 캐시 상태:', employeesCacheLoaded);
+          console.log('캐시된 직원 수:', employeesCache ? employeesCache.length : 0);
+          
+          if (employeesCache && employeesCache.length > 0) {
+            console.log('캐시된 직원 목록 (첫 3명):', employeesCache.slice(0, 3));
+            
+            // 현재 사용자와 정확히 일치하는 직원 찾기
+            const matchedEmployee = employeesCache.find(emp => {
+              console.log(`비교: "${emp.직원번호}" === "${currentUser}"`, emp.직원번호 === currentUser);
+              return emp.직원번호 === currentUser;
+            });
+            
+            console.log('매칭된 직원:', matchedEmployee);
           }
           
           // 캐시에서 직원명 찾기
           currentUserName = getEmployeeNameFromCache(currentUser);
+          console.log('조회된 직원명:', currentUserName);
+          
           if (currentUserName === currentUser) {
             currentUserName = '알 수 없음';
+            console.log('직원명을 찾지 못함 - "알 수 없음"으로 설정');
           }
 
           document.getElementById('userEmployeeNumber').textContent = currentUser;
           document.getElementById('userEmployeeName').textContent = currentUserName;
+          
+          console.log('=== 직원 정보 로드 완료 ===');
         } catch (error) {
           console.error('직원 정보 로드 실패:', error);
           currentUserName = '알 수 없음';
