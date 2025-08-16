@@ -16,6 +16,7 @@
     <!-- Supabase JS 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script src="./supabase.js"></script>
+    <script type="module" src="https://sclass0614.github.io/authCheck/authCheck.js"></script>
   </head>
   <body>
     <!-- 상단 네비게이션 바 -->
@@ -94,32 +95,33 @@
             <label for="mainContent">노트내용:</label>
             <textarea id="mainContent" rows="8" required placeholder="노트 내용을 입력하세요"></textarea>
           </div>
-        </form>
 
-        <!-- 게시여부 별도 컨테이너 -->
-        <div class="publish-container">
-          <div class="form-group inline-group-horizontal">
-            <label>게시여부:</label>
-            <div class="radio-group">
-              <label class="radio-label">
-                <input type="radio" name="publish" value="Y" checked>
-                <span>Y</span>
-              </label>
-              <label class="radio-label">
-                <input type="radio" name="publish" value="N">
-                <span>N</span>
-              </label>
+          <!-- 게시여부 -->
+          <div class="form-group publish-container">
+            <div class="inline-group-horizontal">
+              <label>게시여부:</label>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input type="radio" name="publish" value="Y" checked>
+                  <span>Y</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="publish" value="N">
+                  <span>N</span>
+                </label>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- 버튼 영역 -->
-        <div class="button-section">
-          <button id="resetMainBtn" class="action-btn reset-btn">초기화</button>
-          <button id="saveMainBtn" class="action-btn save-btn">저장</button>
-          <button id="editMainBtn" class="action-btn edit-btn" disabled>수정</button>
-          <button id="deleteMainBtn" class="action-btn delete-btn" disabled>삭제</button>
-        </div>
+          <!-- 버튼 영역 -->
+          <div class="button-section">
+            <button id="resetMainBtn" class="action-btn reset-btn">초기화</button>
+            <button id="saveMainBtn" class="action-btn save-btn">저장</button>
+            <button id="editMainBtn" class="action-btn edit-btn" disabled>수정</button>
+            <button id="deleteMainBtn" class="action-btn delete-btn" disabled>삭제</button>
+          </div>
+        </form>
+      </div>
       </div>
     </div>
 
@@ -338,6 +340,103 @@
         return !!employee;
       }
 
+      // 페이지 전체 비활성화 함수 (모바일용)
+      function disablePageForUnauthorizedUser() {
+        console.log('🚫 무효한 직원번호 - 페이지 전체 비활성화');
+        
+        // 모든 입력 요소 비활성화
+        const allInputs = document.querySelectorAll('input, textarea, button, select');
+        allInputs.forEach(element => {
+          element.disabled = true;
+        });
+        
+        // 네비게이션 버튼 비활성화
+        const navBtns = document.querySelectorAll('.nav-btn');
+        navBtns.forEach(btn => {
+          btn.style.pointerEvents = 'none';
+          btn.style.opacity = '0.5';
+        });
+        
+        // 노트 카드 클릭 이벤트 제거
+        const noteCards = document.querySelectorAll('.note-card');
+        noteCards.forEach(card => {
+          card.style.pointerEvents = 'none';
+          card.style.opacity = '0.5';
+        });
+        
+        // 모바일용 비활성화 오버레이 추가
+        if (!document.getElementById('unauthorizedOverlay')) {
+          const overlay = document.createElement('div');
+          overlay.id = 'unauthorizedOverlay';
+          overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            font-size: 1rem;
+            text-align: center;
+            font-family: "Noto Sans KR", "맑은 고딕", "Malgun Gothic", sans-serif;
+            padding: 1rem;
+            box-sizing: border-box;
+          `;
+          
+          overlay.innerHTML = `
+            <div style="background: #fff; color: #333; padding: 1.5rem; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 320px; width: 90%;">
+              <h3 style="color: #e74c3c; margin-bottom: 1rem; font-size: 1.1rem;">⚠️ 접근 권한 없음</h3>
+              <p style="margin-bottom: 1rem; font-size: 0.9rem; line-height: 1.4;">직원명단에 등록되지 않은 사용자입니다.</p>
+              <p style="font-size: 0.8rem; color: #666; line-height: 1.3;">관리자에게 문의하시기 바랍니다.</p>
+              <p style="font-size: 0.7rem; color: #999; margin-top: 1rem; word-break: break-all;">현재 사용자: ${currentUser}</p>
+            </div>
+          `;
+          
+          document.body.appendChild(overlay);
+        }
+        
+        // 헤더의 사용자 정보도 업데이트
+        document.getElementById('userEmployeeNumber').textContent = currentUser;
+        document.getElementById('userEmployeeName').textContent = '권한 없음';
+      }
+
+      // 페이지 활성화 함수 (유효한 사용자용)
+      function enablePageForAuthorizedUser() {
+        console.log('✅ 유효한 직원번호 - 페이지 활성화');
+        
+        // 기존 오버레이 제거
+        const overlay = document.getElementById('unauthorizedOverlay');
+        if (overlay) {
+          overlay.remove();
+        }
+        
+        // 모든 입력 요소 활성화 (단, readonly는 유지)
+        const allInputs = document.querySelectorAll('input, textarea, button, select');
+        allInputs.forEach(element => {
+          if (!element.hasAttribute('readonly')) {
+            element.disabled = false;
+          }
+        });
+        
+        // 네비게이션 버튼 활성화
+        const navBtns = document.querySelectorAll('.nav-btn');
+        navBtns.forEach(btn => {
+          btn.style.pointerEvents = 'auto';
+          btn.style.opacity = '1';
+        });
+        
+        // 노트 카드 클릭 이벤트 복원
+        const noteCards = document.querySelectorAll('.note-card');
+        noteCards.forEach(card => {
+          card.style.pointerEvents = 'auto';
+          card.style.opacity = '1';
+        });
+      }
+
       // 사용자 정보를 저장소에 저장하는 함수
       function saveUserInfoToStorage(userInfo) {
         if (userInfo && userInfo.trim()) {
@@ -360,19 +459,88 @@
       // parent page에서 사용자 정보 가져오기 함수
       async function getUserFromParent() {
         try {
-          if (currentUser && currentUser.trim()) {
+          // 새로운 로그인 감지를 위해 parent에서 먼저 확인
+          let newUserFromParent = null;
+          
+          // 방법 1: parent window에서 직접 접근하여 최신 정보 확인
+          if (window.parent && window.parent !== window) {
+            try {
+              const parentUserInfo = window.parent.document.getElementById('userInfo');
+              if (parentUserInfo) {
+                // data-emp-no 속성에서 먼저 시도
+                const empNoFromData = parentUserInfo.getAttribute('data-emp-no');
+                if (empNoFromData && empNoFromData.trim()) {
+                  newUserFromParent = empNoFromData.trim();
+                  console.log('🔍 Parent에서 최신 사용자 정보 확인:', newUserFromParent);
+                }
+                
+                // textContent에서 직원번호 추출 시도
+                if (!newUserFromParent) {
+                  const textContent = parentUserInfo.textContent.trim();
+                  if (textContent && !textContent.includes('로그인이 필요합니다')) {
+                    const match = textContent.match(/([A-Za-z0-9]+)\s*님/);
+                    if (match) {
+                      newUserFromParent = match[1].toLowerCase();
+                      console.log('🔍 Parent textContent에서 최신 사용자 정보 확인:', newUserFromParent);
+                    }
+                  }
+                }
+              }
+            } catch (error) {
+              console.log('Parent 접근 실패, 다른 방법 시도');
+            }
+          }
+          
+          // 새로운 사용자 정보가 있고 기존과 다르면 캐시 초기화
+          if (newUserFromParent && newUserFromParent !== currentUser) {
+            console.log('🔄 사용자 변경 감지:', currentUser, '→', newUserFromParent);
+            console.log('🗑️ 기존 캐시 정보 삭제');
+            
+            // 기존 캐시된 정보 모두 삭제
+            currentUser = '';
+            currentUserName = '';
+            selectedNoteId = null;
+            notes = [];
+            cachedNotes = [];
+            
+            // 직원 정보 캐시도 초기화
+            employeesCache = null;
+            employeesCacheLoaded = false;
+            
+            // 저장소에서 기존 정보 삭제
+            try {
+              sessionStorage.clear();
+              localStorage.removeItem('currentUser');
+              localStorage.removeItem('userInfo');
+              localStorage.removeItem('empNo');
+            } catch (error) {
+              console.error('캐시 삭제 중 오류:', error);
+            }
+            
+            // 새로운 사용자 정보 설정
+            currentUser = newUserFromParent;
+            saveUserInfoToStorage(currentUser);
+            console.log('✅ 새로운 사용자 정보로 설정:', currentUser);
+            return;
+          }
+          
+          // 방법 0: 이미 currentUser가 설정되어 있고 변경이 없다면 재사용
+          if (currentUser && currentUser.trim() && !newUserFromParent) {
             console.log('🔄 기존 사용자 정보 재사용:', currentUser);
             return;
           }
 
-          const sessionUser = sessionStorage.getItem('currentUser') || 
-                             sessionStorage.getItem('userInfo') || 
-                             sessionStorage.getItem('empNo');
-          if (sessionUser && sessionUser.trim()) {
-            currentUser = sessionUser.trim();
-            console.log('✅ sessionStorage에서 사용자 정보 복원:', currentUser);
-            saveUserInfoToStorage(currentUser);
-            return;
+          // 방법 2: sessionStorage에서 확인 (새로고침 대응, 단 parent 정보가 없을 때만)
+          if (!newUserFromParent) {
+            const sessionUser = sessionStorage.getItem('currentUser') || 
+                               sessionStorage.getItem('userInfo') || 
+                               sessionStorage.getItem('empNo');
+            if (sessionUser && sessionUser.trim()) {
+              currentUser = sessionUser.trim();
+              console.log('✅ sessionStorage에서 사용자 정보 복원:', currentUser);
+              saveUserInfoToStorage(currentUser);
+              return;
+            }
           }
 
           const userInfoElement = document.getElementById('userInfo');
@@ -383,33 +551,7 @@
             return;
           }
 
-          if (window.parent && window.parent !== window) {
-            try {
-              const parentUserInfo = window.parent.document.getElementById('userInfo');
-              if (parentUserInfo) {
-                const empNoFromData = parentUserInfo.getAttribute('data-emp-no');
-                if (empNoFromData && empNoFromData.trim()) {
-                  currentUser = empNoFromData.trim();
-                  console.log('✅ parent window data-emp-no에서 가져옴:', currentUser);
-                  saveUserInfoToStorage(currentUser);
-                  return;
-                }
-                
-                const textContent = parentUserInfo.textContent.trim();
-                if (textContent && !textContent.includes('로그인이 필요합니다')) {
-                  const match = textContent.match(/([A-Za-z0-9]+)\s*님/);
-                  if (match) {
-                    currentUser = match[1].toLowerCase();
-                    console.log('✅ parent window textContent에서 가져옴:', currentUser);
-                    saveUserInfoToStorage(currentUser);
-                    return;
-                  }
-                }
-              }
-            } catch (error) {
-              // parent 접근 불가 시 다음 방법으로 진행
-            }
-          }
+          // 방법 3: parent window에서 직접 접근 (이미 위에서 처리됨, 중복 제거)
 
           const urlParams = new URLSearchParams(window.location.search);
           const userParam = urlParams.get('user') || urlParams.get('userId') || urlParams.get('empNo');
@@ -491,10 +633,14 @@
           console.log('=== 노트 목록 로드 시작 ===');
           
           if (!isValidEmployee(currentUser)) {
-            console.log('🚫 직원명단에 없는 사용자입니다. 서버 요청을 중단합니다.');
+            console.log('🚫 직원명단에 없는 사용자입니다. 페이지 전체를 비활성화합니다.');
             cachedNotes = [];
             displayNotes(cachedNotes);
+            disablePageForUnauthorizedUser(); // 페이지 전체 비활성화
             return;
+          } else {
+            // 유효한 사용자인 경우 페이지 활성화 확인
+            enablePageForAuthorizedUser();
           }
           
           if (!currentDateRange.startDate || !currentDateRange.endDate) {
@@ -789,7 +935,11 @@
           window.setTags_mainTag(note.태그 || '');
         }
         
-        document.getElementById('mainContent').value = note.노트내용 || '';
+        const contentTextarea = document.getElementById('mainContent');
+        contentTextarea.value = note.노트내용 || '';
+        
+        // 내용이 채워진 후 높이 조정
+        autoResizeTextarea(contentTextarea);
         
         const publishRadio = document.querySelector(`input[name="publish"][value="${note.게시여부 || 'Y'}"]`);
         if (publishRadio) publishRadio.checked = true;
@@ -807,6 +957,12 @@
         
         if (window.setTags_mainTag) {
           window.setTags_mainTag('');
+        }
+        
+        // 노트내용 textarea 높이 초기화
+        const contentTextarea = document.getElementById('mainContent');
+        if (contentTextarea) {
+          autoResizeTextarea(contentTextarea);
         }
         
         await updateNoteNumber();
@@ -1054,9 +1210,10 @@
 
         try {
           if (!isValidEmployee(currentUser)) {
-            console.log('🚫 직원명단에 없는 사용자입니다. 검색을 중단합니다.');
+            console.log('🚫 직원명단에 없는 사용자입니다. 페이지 전체를 비활성화합니다.');
             cachedNotes = [];
             displayNotes(cachedNotes);
+            disablePageForUnauthorizedUser(); // 페이지 전체 비활성화
             return;
           }
 
@@ -1209,6 +1366,9 @@
             } else {
               contentTextarea.value = template;
             }
+            
+            // 템플릿 추가 후 높이 조정
+            autoResizeTextarea(contentTextarea);
           }
         }
       }
@@ -1291,6 +1451,43 @@
       window.confirm = customConfirm;
 
 
+
+      // textarea 높이 자동 조정 함수 - 완전히 새로운 구현
+      function autoResizeTextarea(textarea) {
+        if (!textarea) return;
+        
+        // 임시로 높이를 auto로 설정하여 실제 내용 높이 측정
+        const originalHeight = textarea.style.height;
+        textarea.style.height = 'auto';
+        
+        // 실제 스크롤 높이 측정
+        const scrollHeight = textarea.scrollHeight;
+        const minHeight = 120;
+        
+        // 최종 높이 계산
+        const finalHeight = Math.max(scrollHeight, minHeight);
+        
+        // 높이 적용
+        textarea.style.height = finalHeight + 'px';
+        
+        // 콘솔에 디버깅 정보 출력
+        console.log('📏 Textarea 높이 자동 조정:', {
+          scrollHeight: scrollHeight,
+          minHeight: minHeight,
+          finalHeight: finalHeight,
+          previousHeight: originalHeight
+        });
+        
+        // 높이 변경 후 스크롤 조정
+        requestAnimationFrame(() => {
+          if (document.activeElement === textarea) {
+            textarea.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'nearest' 
+            });
+          }
+        });
+      }
 
       // 부드러운 스크롤을 아래로 내리는 함수
       function scrollToBottomSmooth() {
@@ -1391,22 +1588,54 @@
           });
         });
 
-        // 노트내용 입력 필드 포커스 시 스크롤 이벤트
+        // 노트내용 입력 필드 자동 높이 조정 시스템 - 완전히 새로운 구현
         const mainContentTextarea = document.getElementById('mainContent');
         if (mainContentTextarea) {
+          console.log('🚀 Textarea 자동 높이 시스템 초기화');
+          
+          // 초기 높이 설정
+          autoResizeTextarea(mainContentTextarea);
+
+          // input 이벤트 - 타이핑할 때마다 높이 조정
+          mainContentTextarea.addEventListener('input', function() {
+            console.log('⌨️ Input 이벤트 발생');
+            autoResizeTextarea(this);
+          });
+
+          // 붙여넣기 이벤트
+          mainContentTextarea.addEventListener('paste', function() {
+            console.log('📋 Paste 이벤트 발생');
+            // 붙여넣기 내용이 반영된 후 높이 조정
+            setTimeout(() => {
+              autoResizeTextarea(this);
+            }, 50);
+          });
+
+          // 키보드 이벤트 (Enter, Backspace 등)
+          mainContentTextarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === 'Backspace' || e.key === 'Delete') {
+              setTimeout(() => {
+                autoResizeTextarea(this);
+              }, 10);
+            }
+          });
+
+          // 포커스 이벤트
           mainContentTextarea.addEventListener('focus', function() {
-            // 모바일 키보드가 올라온 후 스크롤 (iOS/Android 대응)
+            console.log('🎯 Focus 이벤트 발생');
+            autoResizeTextarea(this);
+            
+            // 모바일 키보드 대응
             setTimeout(() => {
               scrollToBottomSmooth();
             }, 500);
           });
 
-          // 입력 시작시에도 스크롤 (추가 보장)
-          mainContentTextarea.addEventListener('input', function() {
-            // 입력이 시작되면 한 번 더 스크롤 확인
-            if (this === document.activeElement) {
+          // 창 크기 변경 시에도 높이 재조정
+          window.addEventListener('resize', function() {
+            if (document.activeElement === mainContentTextarea) {
               setTimeout(() => {
-                scrollToBottomSmooth();
+                autoResizeTextarea(mainContentTextarea);
               }, 100);
             }
           });
@@ -1426,6 +1655,20 @@
           } else {
             // 키보드가 내려간 경우 초기 높이 업데이트
             initialViewportHeight = window.innerHeight;
+          }
+        });
+
+        // 브라우저 탭 활성화 시 사용자 정보 재확인
+        document.addEventListener('visibilitychange', function() {
+          if (document.hidden) {
+            console.log('🔒 탭 비활성화 - 보안 모드');
+          } else {
+            console.log('👁️ 탭 활성화 - 사용자 정보 재확인');
+            // 탭이 다시 활성화될 때 사용자 정보 재확인
+            setTimeout(async () => {
+              await getUserFromParent();
+              await loadUserInfo();
+            }, 100);
           }
         });
       }

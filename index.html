@@ -19,6 +19,7 @@
     <!-- 스크립트 파일 -->
 
     <script src="./supabase.js"></script>
+    <script type="module" src="https://sclass0614.github.io/authCheck/authCheck.js"></script>
     
     
   </head>
@@ -536,25 +537,174 @@
         }
       }
 
+      // 페이지 전체 비활성화 함수
+      function disablePageForUnauthorizedUser() {
+        console.log('🚫 무효한 직원번호 - 페이지 전체 비활성화');
+        
+        // 모든 입력 요소 비활성화
+        const allInputs = document.querySelectorAll('input, textarea, button, select');
+        allInputs.forEach(element => {
+          element.disabled = true;
+        });
+        
+        // 테이블 클릭 이벤트 제거
+        const tableRows = document.querySelectorAll('#notesTableBody tr');
+        tableRows.forEach(row => {
+          row.style.pointerEvents = 'none';
+          row.style.opacity = '0.5';
+        });
+        
+        // 메인 컨테이너에 비활성화 오버레이 추가
+        const container = document.querySelector('.container');
+        if (container && !document.getElementById('unauthorizedOverlay')) {
+          const overlay = document.createElement('div');
+          overlay.id = 'unauthorizedOverlay';
+          overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+            font-family: "Noto Sans KR", "맑은 고딕", "Malgun Gothic", sans-serif;
+          `;
+          
+          overlay.innerHTML = `
+            <div style="background: #fff; color: #333; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 400px;">
+              <h3 style="color: #e74c3c; margin-bottom: 1rem;">⚠️ 접근 권한 없음</h3>
+              <p style="margin-bottom: 1rem;">직원명단에 등록되지 않은 사용자입니다.</p>
+              <p style="font-size: 0.9rem; color: #666;">관리자에게 문의하시기 바랍니다.</p>
+              <p style="font-size: 0.8rem; color: #999; margin-top: 1rem;">현재 사용자: ${currentUser}</p>
+            </div>
+          `;
+          
+          document.body.appendChild(overlay);
+        }
+        
+        // 헤더의 사용자 정보도 업데이트
+        document.getElementById('userEmployeeNumber').textContent = currentUser;
+        document.getElementById('userEmployeeName').textContent = '권한 없음';
+      }
+
+      // 페이지 활성화 함수 (유효한 사용자용)
+      function enablePageForAuthorizedUser() {
+        console.log('✅ 유효한 직원번호 - 페이지 활성화');
+        
+        // 기존 오버레이 제거
+        const overlay = document.getElementById('unauthorizedOverlay');
+        if (overlay) {
+          overlay.remove();
+        }
+        
+        // 모든 입력 요소 활성화 (단, readonly는 유지)
+        const allInputs = document.querySelectorAll('input, textarea, button, select');
+        allInputs.forEach(element => {
+          if (!element.hasAttribute('readonly')) {
+            element.disabled = false;
+          }
+        });
+        
+        // 테이블 클릭 이벤트 복원
+        const tableRows = document.querySelectorAll('#notesTableBody tr');
+        tableRows.forEach(row => {
+          row.style.pointerEvents = 'auto';
+          row.style.opacity = '1';
+        });
+      }
+
       // parent page에서 사용자 정보 가져오기 함수
       async function getUserFromParent() {
         try {
-          // 방법 0: 이미 currentUser가 설정되어 있다면 재사용
-          if (currentUser && currentUser.trim()) {
+          // 새로운 로그인 감지를 위해 parent에서 먼저 확인
+          let newUserFromParent = null;
+          
+          // 방법 1: parent window에서 직접 접근하여 최신 정보 확인
+          if (window.parent && window.parent !== window) {
+            try {
+              const parentUserInfo = window.parent.document.getElementById('userInfo');
+              if (parentUserInfo) {
+                // data-emp-no 속성에서 먼저 시도
+                const empNoFromData = parentUserInfo.getAttribute('data-emp-no');
+                if (empNoFromData && empNoFromData.trim()) {
+                  newUserFromParent = empNoFromData.trim();
+                  console.log('🔍 Parent에서 최신 사용자 정보 확인:', newUserFromParent);
+                }
+                
+                // textContent에서 직원번호 추출 시도
+                if (!newUserFromParent) {
+                  const textContent = parentUserInfo.textContent.trim();
+                  if (textContent && !textContent.includes('로그인이 필요합니다')) {
+                    const match = textContent.match(/([A-Za-z0-9]+)\s*님/);
+                    if (match) {
+                      newUserFromParent = match[1].toLowerCase();
+                      console.log('🔍 Parent textContent에서 최신 사용자 정보 확인:', newUserFromParent);
+                    }
+                  }
+                }
+              }
+            } catch (error) {
+              console.log('Parent 접근 실패, 다른 방법 시도');
+            }
+          }
+          
+          // 새로운 사용자 정보가 있고 기존과 다르면 캐시 초기화
+          if (newUserFromParent && newUserFromParent !== currentUser) {
+            console.log('🔄 사용자 변경 감지:', currentUser, '→', newUserFromParent);
+            console.log('🗑️ 기존 캐시 정보 삭제');
+            
+            // 기존 캐시된 정보 모두 삭제
+            currentUser = '';
+            currentUserName = '';
+            selectedNoteId = null;
+            notes = [];
+            cachedNotes = [];
+            
+            // 직원 정보 캐시도 초기화
+            employeesCache = null;
+            employeesCacheLoaded = false;
+            
+            // 저장소에서 기존 정보 삭제
+            try {
+              sessionStorage.clear();
+              localStorage.removeItem('currentUser');
+              localStorage.removeItem('userInfo');
+              localStorage.removeItem('empNo');
+            } catch (error) {
+              console.error('캐시 삭제 중 오류:', error);
+            }
+            
+            // 새로운 사용자 정보 설정
+            currentUser = newUserFromParent;
+            saveUserInfoToStorage(currentUser);
+            console.log('✅ 새로운 사용자 정보로 설정:', currentUser);
+            return;
+          }
+          
+          // 방법 0: 이미 currentUser가 설정되어 있고 변경이 없다면 재사용
+          if (currentUser && currentUser.trim() && !newUserFromParent) {
             console.log('🔄 기존 사용자 정보 재사용:', currentUser);
             return;
           }
 
-          // 방법 1: sessionStorage에서 먼저 확인 (새로고침 대응)
-          const sessionUser = sessionStorage.getItem('currentUser') || 
-                             sessionStorage.getItem('userInfo') || 
-                             sessionStorage.getItem('empNo');
-          if (sessionUser && sessionUser.trim()) {
-            currentUser = sessionUser.trim();
-            console.log('✅ sessionStorage에서 사용자 정보 복원:', currentUser);
-            // sessionStorage에 저장된 정보를 다시 저장하여 일관성 유지
-            saveUserInfoToStorage(currentUser);
-            return;
+          // 방법 2: sessionStorage에서 확인 (새로고침 대응, 단 parent 정보가 없을 때만)
+          if (!newUserFromParent) {
+            const sessionUser = sessionStorage.getItem('currentUser') || 
+                               sessionStorage.getItem('userInfo') || 
+                               sessionStorage.getItem('empNo');
+            if (sessionUser && sessionUser.trim()) {
+              currentUser = sessionUser.trim();
+              console.log('✅ sessionStorage에서 사용자 정보 복원:', currentUser);
+              // sessionStorage에 저장된 정보를 다시 저장하여 일관성 유지
+              saveUserInfoToStorage(currentUser);
+              return;
+            }
           }
 
           // 방법 2: 현재 페이지의 userInfo 요소에서 가져오기
@@ -566,36 +716,7 @@
             return;
           }
 
-          // 방법 3: parent window에서 직접 접근
-          if (window.parent && window.parent !== window) {
-            try {
-              const parentUserInfo = window.parent.document.getElementById('userInfo');
-              if (parentUserInfo) {
-                // data-emp-no 속성에서 먼저 시도
-                const empNoFromData = parentUserInfo.getAttribute('data-emp-no');
-                if (empNoFromData && empNoFromData.trim()) {
-                  currentUser = empNoFromData.trim();
-                  console.log('✅ parent window data-emp-no에서 가져옴:', currentUser);
-                  saveUserInfoToStorage(currentUser);
-                  return;
-                }
-                
-                // textContent에서 직원번호 추출 시도
-                const textContent = parentUserInfo.textContent.trim();
-                if (textContent && !textContent.includes('로그인이 필요합니다')) {
-                  const match = textContent.match(/([A-Za-z0-9]+)\s*님/);
-                  if (match) {
-                    currentUser = match[1].toLowerCase();
-                    console.log('✅ parent window textContent에서 가져옴:', currentUser);
-                    saveUserInfoToStorage(currentUser);
-                    return;
-                  }
-                }
-              }
-            } catch (error) {
-              // parent 접근 불가 시 다음 방법으로 진행
-            }
-          }
+          // 방법 3: parent window에서 직접 접근 (이미 위에서 처리됨, 중복 제거)
 
           // 방법 4: URL 파라미터에서 가져오기
           const urlParams = new URLSearchParams(window.location.search);
@@ -1073,12 +1194,16 @@
         try {
           console.log('=== 노트 목록 로드 시작 ===');
           
-          // 직원 유효성 검사 - 유효하지 않으면 서버 요청 중단
+          // 직원 유효성 검사 - 유효하지 않으면 페이지 전체 비활성화
           if (!isValidEmployee(currentUser)) {
-            console.log('🚫 직원명단에 없는 사용자입니다. 서버 요청을 중단합니다.');
+            console.log('🚫 직원명단에 없는 사용자입니다. 페이지 전체를 비활성화합니다.');
             cachedNotes = []; // 빈 배열로 설정
             displayNotes(cachedNotes); // 빈 테이블 표시
+            disablePageForUnauthorizedUser(); // 페이지 전체 비활성화
             return;
+          } else {
+            // 유효한 사용자인 경우 페이지 활성화 확인
+            enablePageForAuthorizedUser();
           }
           
           // 날짜 범위가 설정되지 않았으면 초기화
@@ -1206,11 +1331,17 @@
           // clearUserInfoFromStorage();
         });
         
-        // 브라우저 탭 비활성화 시 추가 보안 (선택적)
+        // 브라우저 탭 활성화 시 사용자 정보 재확인
         document.addEventListener('visibilitychange', function() {
           if (document.hidden) {
             console.log('🔒 탭 비활성화 - 보안 모드');
-            // 필요시 여기서 추가 보안 조치
+          } else {
+            console.log('👁️ 탭 활성화 - 사용자 정보 재확인');
+            // 탭이 다시 활성화될 때 사용자 정보 재확인
+            setTimeout(async () => {
+              await getUserFromParent();
+              await loadUserInfo();
+            }, 100);
           }
         });
 
@@ -1522,11 +1653,12 @@
         const publishFilter = document.querySelector('input[name="publishFilter"]:checked').value;
 
         try {
-          // 직원 유효성 검사 - 유효하지 않으면 서버 요청 중단
+          // 직원 유효성 검사 - 유효하지 않으면 페이지 전체 비활성화
           if (!isValidEmployee(currentUser)) {
-            console.log('🚫 직원명단에 없는 사용자입니다. 검색을 중단합니다.');
+            console.log('🚫 직원명단에 없는 사용자입니다. 페이지 전체를 비활성화합니다.');
             cachedNotes = []; // 빈 배열로 설정
             displayNotes(cachedNotes); // 빈 테이블 표시
+            disablePageForUnauthorizedUser(); // 페이지 전체 비활성화
             return;
           }
 

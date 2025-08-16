@@ -408,36 +408,36 @@ body {
  * 노트 작성/편집 페이지 (Page 2)
  *******************************************/
 .editor-section {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
+    height: calc(100vh - var(--header-height) - var(--nav-height));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background-color: white;
 }
 
-/* 메인 폼 */
+/* 메인 폼 - 자연스러운 플로우 레이아웃 */
 .main-form {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0.625rem 1rem;
+    min-height: 100%;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0;
     background-color: white;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
+    box-sizing: border-box;
 }
 
 .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    margin-bottom: 5px;
 }
 
 /* 폼 그룹 내 폼 행 */
 .form-group.form-row {
+    display: flex;
     flex-direction: row !important;
+    gap: 0.75rem;
 }
 
 .form-group .form-row {
+    display: flex;
     flex-direction: row !important;
+    gap: 0.75rem;
 }
 
 .form-group label {
@@ -446,7 +446,17 @@ body {
     color: var(--main-color);
 }
 
-.form-group input,
+.form-group input {
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+    font-family: inherit;
+    height: 44px; /* 입력 필드만 고정 높이 */
+    box-sizing: border-box;
+}
+
 .form-group textarea {
     padding: 0.55rem 0.75rem;
     border: 1px solid var(--border-color);
@@ -454,8 +464,7 @@ body {
     font-size: 0.9rem;
     transition: border-color 0.2s;
     font-family: inherit;
-    height: 44px; /* 명시적 높이 지정 */
-    box-sizing: border-box;
+    /* textarea는 높이 자동 조정 */
 }
 
 .form-group input:focus,
@@ -639,33 +648,49 @@ body {
     cursor: not-allowed;
 }
 
-/* Textarea 컨테이너 */
+/* Textarea 컨테이너 - 완전히 새로운 접근법 */
 .textarea-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    flex: 1;
-    min-height: 0;
+    margin-bottom: 0;
+}
+
+.textarea-container label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--main-color);
 }
 
 .textarea-container textarea {
-    flex: 1;
-    resize: none;
+    width: 100%;
     min-height: 120px;
-    height: auto; /* textarea는 자동 높이 */
-    overflow-y: auto;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.9rem;
     font-family: "Noto Sans KR", "맑은 고딕", "Malgun Gothic", sans-serif;
-    font-size: 0.85rem;
     line-height: 1.6;
+    resize: none;
+    overflow-y: hidden;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
 }
 
-/* 게시여부 컨테이너 */
+.textarea-container textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(90, 143, 123, 0.2);
+}
+
+/* 게시여부 컨테이너 - 자연스러운 플로우 */
 .publish-container {
     background-color: #f8f9fa;
-    padding: 1rem;
-    border-top: 1px solid var(--border-color);
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0;
+    padding: 0.05rem 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    margin-bottom: 0;
+    min-height: 0;
+    height: auto;
 }
 
 .publish-container .form-group {
@@ -673,25 +698,44 @@ body {
 }
 
 .publish-container .inline-group-horizontal {
+    display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 1rem;
+    gap: 0.3rem;
+    min-height: 0;
+    height: auto;
+    line-height: 0.9;
+    font-size: 0.75rem;
 }
 
 .publish-container .radio-group {
     margin-top: 0;
+    margin-bottom: 0;
 }
 
-/* 버튼 섹션 */
+.publish-container .radio-label {
+    margin-bottom: 0;
+    padding: 0.05rem 0.2rem;
+    min-height: 0;
+    height: auto;
+    line-height: 0.9;
+    font-size: 0.7rem;
+}
+
+.publish-container label {
+    margin-bottom: 0;
+    font-size: 0.75rem;
+    line-height: 0.9;
+}
+
+/* 버튼 섹션 - 자연스러운 플로우 */
 .button-section {
     background-color: white;
-    padding: 0.75rem;
-    border-top: 1px solid var(--border-color);
+    padding: 0.5rem 0;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.6rem;
-    flex-shrink: 0;
-    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 0;
 }
 
 .action-btn {
