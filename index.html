@@ -2007,14 +2007,22 @@
           // 회원상담 태그일 경우 노트내용에 템플릿 추가
           if (tag === '회원상담') {
             const contentTextarea = document.getElementById('mainContent');
-            const template = `보호자성함 :
-보호자연락처 :
-어르신성함 :
-거주지 :
-요양등급여부 :
-상담내용 :
-희망사항 :
-요구사항 :`;
+            const template = `1. 상담일시 : 
+
+2. 기본정보 :
+ - 보호자명 및 연락처 : 
+ - 어르신 명 :
+ - 요양등급 : 
+ - 나이 :
+ - 주소 :
+
+3. 어르신 진단 :
+
+4. 기능상태 :
+
+5. 시설이용 특이사항 : 
+
+6. 기타 요구사항 등 :`;
             
             // 기존 내용이 있으면 줄바꿈 후 추가, 없으면 바로 추가
             if (contentTextarea.value.trim()) {
