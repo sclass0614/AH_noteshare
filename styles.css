@@ -1296,7 +1296,7 @@ body {
 
 .content-edit-modal-body textarea {
     width: 100%;
-    height: 100%;
+    height: calc(90vh - 140px); /* 전체 높이에서 헤더+푸터 높이 제외 */
     border: 2px solid var(--border-color);
     border-radius: 6px;
     padding: 16px;
@@ -1406,6 +1406,7 @@ body {
     }
     
     .content-edit-modal-body textarea {
+        height: calc(95vh - 160px); /* 모바일에서 헤더+푸터 높이 제외 */
         padding: 12px;
         font-size: 16px; /* iOS 줌 방지 */
     }

@@ -2169,11 +2169,17 @@
         // 모달 표시
         modal.style.display = 'block';
         
+        // 텍스트에리어 높이 동적 조정
+        adjustModalTextareaHeight();
+        
         // 포커스 설정 (약간의 딜레이 후)
         setTimeout(() => {
           modalTextarea.focus();
           modalTextarea.setSelectionRange(modalTextarea.value.length, modalTextarea.value.length);
         }, 100);
+        
+        // 창 크기 변경 시 높이 재조정
+        window.addEventListener('resize', adjustModalTextareaHeight);
         
         // 모달 외부 클릭 시 닫기
         modal.addEventListener('click', function(e) {
@@ -2200,6 +2206,7 @@
         
         // 이벤트 리스너 제거
         document.removeEventListener('keydown', handleContentEditKeydown);
+        window.removeEventListener('resize', adjustModalTextareaHeight);
         document.getElementById('contentEditCloseBtn').removeEventListener('click', closeContentEditModal);
         document.getElementById('contentEditCancelBtn').removeEventListener('click', closeContentEditModal);
         document.getElementById('contentEditSaveBtn').removeEventListener('click', saveContentEdit);
@@ -2237,6 +2244,35 @@
           e.preventDefault();
           saveContentEdit();
         }
+      }
+
+      // 모달 텍스트에리어 높이 동적 조정
+      function adjustModalTextareaHeight() {
+        const textarea = document.getElementById('contentEditTextarea');
+        const modal = document.getElementById('contentEditModal');
+        
+        if (!textarea || !modal || modal.style.display === 'none') {
+          return;
+        }
+        
+        // 현재 뷰포트 높이 가져오기
+        const viewportHeight = window.innerHeight;
+        
+        // 헤더 + 푸터 + 패딩 등의 고정 높이 (대략적 계산)
+        const fixedHeight = 140; // 헤더(약 60px) + 푸터(약 60px) + 패딩 등
+        
+        // 모바일 환경인지 확인
+        const isMobile = window.innerWidth <= 768;
+        const modalHeight = isMobile ? viewportHeight * 0.95 : viewportHeight * 0.90;
+        const mobileExtraHeight = isMobile ? 20 : 0; // 모바일에서 추가 여유 공간
+        
+        // 계산된 높이 적용
+        const calculatedHeight = modalHeight - fixedHeight - mobileExtraHeight;
+        const finalHeight = Math.max(calculatedHeight, 200); // 최소 200px 보장
+        
+        textarea.style.height = finalHeight + 'px';
+        
+        console.log('📏 모달 텍스트에리어 높이 조정:', finalHeight + 'px');
       }
     </script>
   </body>
