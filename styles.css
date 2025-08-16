@@ -393,7 +393,7 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 5px;
     height: 100%;
-    overflow: hidden; /* 전체적으로는 hidden 유지하되 내부에서 스크롤 처리 */
+    overflow: hidden;
 }
 
 /* 불필요한 스타일들 제거 완료 */
@@ -665,17 +665,16 @@ body {
     flex-direction: column;
     flex: 1;
     min-height: 0;
-    overflow-y: auto; /* 세로 스크롤 허용 */
-    max-height: 100%; /* 최대 높이 제한 */
+    overflow: hidden;
 }
 
 .form-header {
     background-color: var(--light-color);
-    padding: 1rem 1.5rem;
+    padding: 0.5rem 1rem;
     border-bottom: 1px solid var(--border-color);
     font-weight: bold;
     flex-shrink: 0;
-    min-height: 50px;
+    min-height: 35px;
     display: flex;
     align-items: center;
 }
@@ -690,19 +689,19 @@ body {
 .main-form {
     display: flex;
     flex-direction: column;
-    flex: 0 0 auto; /* 자동 크기 조정, 축소하지 않음 */
+    flex: 1;
     padding: 1.5rem;
     min-height: 0;
-    gap: 1rem;
+    gap: 0.5rem;
 }
 
 /* textarea 컨테이너 */
 .textarea-container {
     display: flex;
     flex-direction: column;
-    flex: 0 0 auto; /* 자동 크기 조정 */
+    flex: 1;
     margin-bottom: 0;
-    min-height: 150px; /* 최소 높이 보장 */
+    min-height: 0;
 }
 
 .textarea-container label {
@@ -713,7 +712,7 @@ body {
 
 .textarea-container textarea {
     flex: 1;
-    resize: vertical; /* 세로 크기 조정 허용 */
+    resize: none;
     padding: 0.75rem;
     border: 1px solid var(--border-color);
     border-radius: 4px;
@@ -721,8 +720,7 @@ body {
     font-size: 0.85rem;
     line-height: 1.6;
     overflow-y: auto;
-    min-height: 120px; /* 최소 높이 증가 */
-    max-height: 300px; /* 최대 높이 제한 */
+    min-height: 80px;
 }
 
 /* 게시여부 컨테이너 */
@@ -754,7 +752,7 @@ body {
 }
 
 .main-form .form-group:not(.textarea-container) {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     flex-shrink: 0;
 }
 
@@ -988,41 +986,21 @@ body {
        * 8. 스크롤바 스타일
        *******************************************/
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
     background: #f1f1f1;
-    border-radius: 4px;
+    border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
     background: var(--accent-color);
-    border-radius: 4px;
-    border: 1px solid #f1f1f1;
+    border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--main-color);
-}
-
-/* 우측 섹션 전용 스크롤바 */
-.write-form::-webkit-scrollbar {
-    width: 8px;
-}
-
-.write-form::-webkit-scrollbar-track {
-    background: #f8f9fa;
-    border-radius: 4px;
-}
-
-.write-form::-webkit-scrollbar-thumb {
-    background: var(--accent-color);
-    border-radius: 4px;
-}
-
-.write-form::-webkit-scrollbar-thumb:hover {
     background: var(--main-color);
 }
 
@@ -1257,8 +1235,8 @@ body {
     position: relative;
     background-color: #fefefe;
     margin: 2% auto;
-    width: 90%;
-    max-width: 1000px;
+    width: 80%;
+    max-width: 800px;
     height: 90vh;
     border-radius: 8px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -1411,6 +1389,7 @@ body {
     .content-edit-modal-content {
         margin: 1% auto;
         width: 95%;
+        max-width: none;
         height: 95vh;
     }
     
