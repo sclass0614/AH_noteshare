@@ -1300,7 +1300,7 @@ body {
     height: calc(90vh - 100px); /* 푸터 제거로 높이 증가 */
     border: 2px solid var(--border-color);
     border-radius: 6px;
-    padding: 60px 16px 16px 16px; /* 상단에 버튼 공간 확보 */
+    padding: 16px; /* 일반 패딩으로 복원 */
     font-size: 14px;
     font-family: "맑은 고딕", "Malgun Gothic", monospace;
     line-height: 1.6;
@@ -1316,14 +1316,15 @@ body {
     box-shadow: 0 0 0 3px rgba(35, 81, 53, 0.1);
 }
 
-/* 텍스트에리어 상단 우측 버튼 컨테이너 */
+/* 모달 바디 우측 상단 버튼 컨테이너 */
 .textarea-buttons {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 0;
+    right: 0;
     display: flex;
     gap: 10px;
     z-index: 10;
+    padding: 20px;
 }
 
 /* 텍스트에리어 상단 버튼 스타일 */
@@ -1413,13 +1414,14 @@ body {
     
     .content-edit-modal-body textarea {
         height: calc(95vh - 80px); /* 푸터 제거로 높이 증가 */
-        padding: 70px 12px 12px 12px; /* 상단에 버튼 공간 확보 */
+        padding: 12px; /* 일반 패딩으로 복원 */
         font-size: 16px; /* iOS 줌 방지 */
     }
     
     .textarea-buttons {
-        top: 25px;
-        right: 20px;
+        top: 0;
+        right: 0;
+        padding: 15px;
         flex-direction: row;
         gap: 8px;
     }
