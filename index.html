@@ -256,10 +256,10 @@
         </div>
         <div class="content-edit-modal-body">
           <textarea id="contentEditTextarea" placeholder="노트 내용을 입력하세요..."></textarea>
-        </div>
-        <div class="content-edit-modal-footer">
-          <button type="button" id="contentEditCancelBtn" class="content-edit-btn cancel-btn">취소</button>
-          <button type="button" id="contentEditSaveBtn" class="content-edit-btn save-btn">편집 완료</button>
+          <div class="textarea-buttons">
+            <button type="button" id="contentEditSaveBtn" class="textarea-button save-btn">완료</button>
+            <button type="button" id="contentEditCancelBtn" class="textarea-button cancel-btn">취소</button>
+          </div>
         </div>
       </div>
     </div>
@@ -2258,8 +2258,8 @@
         // 현재 뷰포트 높이 가져오기
         const viewportHeight = window.innerHeight;
         
-        // 헤더 + 푸터 + 패딩 등의 고정 높이 (대략적 계산)
-        const fixedHeight = 140; // 헤더(약 60px) + 푸터(약 60px) + 패딩 등
+        // 헤더 + 패딩 등의 고정 높이 (푸터 제거로 감소)
+        const fixedHeight = 100; // 헤더(약 60px) + 패딩 등 (푸터 제거됨)
         
         // 모바일 환경인지 확인
         const isMobile = window.innerWidth <= 768;
