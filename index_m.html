@@ -14,9 +14,9 @@
     <link rel="stylesheet" href="./styles_m.css" />
     
     <!-- Supabase JS 라이브러리 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-    <script src="./supabase.js"></script>
-    <!-- <script type="module" src="https://sclass0614.github.io/authCheck/authCheck.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js" onerror="console.error('Supabase CDN 로딩 실패')"></script>
+    <script src="./supabase.js" onerror="console.error('supabase.js 로딩 실패')"></script>
+    <script type="module" src="https://sclass0614.github.io/authCheck/authCheck.js" onerror="console.log('authCheck.js 로딩 실패 - 계속 진행')"></script>
   </head>
   <body>
     <!-- 상단 네비게이션 바 -->
@@ -282,22 +282,36 @@
         return { startDate: twoWeeksAgo, endDate: today };
       }
 
-      // 직원 정보 초기화 및 캐싱
+      // 직원 정보 초기화 및 캐싱 (모바일 최적화)
       async function initializeEmployeesCache() {
         if (employeesCacheLoaded) {
           return employeesCache;
         }
         
         try {
-          console.log('직원 정보 로딩 중...');
-          employeesCache = await getEmployeesInfo();
+          console.log('📋 직원 정보 로딩 중...');
+          
+          // 모바일에서 네트워크 타임아웃 처리
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('네트워크 연결 시간 초과')), 10000);
+          });
+          
+          const employeesPromise = getEmployeesInfo();
+          employeesCache = await Promise.race([employeesPromise, timeoutPromise]);
+          
           employeesCacheLoaded = true;
-          console.log('직원 정보 로딩 완료:', employeesCache.length, '명');
+          console.log('✅ 직원 정보 로딩 완료:', employeesCache.length, '명');
           return employeesCache;
         } catch (error) {
-          console.error('직원 정보 로딩 실패:', error);
+          console.error('❌ 직원 정보 로딩 실패:', error);
           employeesCache = [];
           employeesCacheLoaded = true;
+          
+          // 모바일에서 네트워크 오류 시 사용자에게 알림
+          if (isMobileDevice()) {
+            console.warn('📱 모바일 환경에서 직원 정보 로딩 실패');
+          }
+          
           return employeesCache;
         }
       }
@@ -627,19 +641,18 @@
         console.log('페이지 전환:', pageName);
       }
 
-      // 노트 목록 로드
+      // 노트 목록 로드 (모바일 최적화)
       async function loadNotes() {
         try {
-          console.log('=== 노트 목록 로드 시작 ===');
+          console.log('📝 === 노트 목록 로드 시작 ===');
           
           if (!isValidEmployee(currentUser)) {
             console.log('🚫 직원명단에 없는 사용자입니다. 페이지 전체를 비활성화합니다.');
             cachedNotes = [];
             displayNotes(cachedNotes);
-            disablePageForUnauthorizedUser(); // 페이지 전체 비활성화
+            disablePageForUnauthorizedUser();
             return;
           } else {
-            // 유효한 사용자인 경우 페이지 활성화 확인
             enablePageForAuthorizedUser();
           }
           
@@ -647,16 +660,23 @@
             initializeDateRange();
           }
           
-          console.log('날짜 범위:', currentDateRange);
-          console.log('현재 사용자:', currentUser);
+          console.log('📅 날짜 범위:', currentDateRange);
+          console.log('👤 현재 사용자:', currentUser);
           
-          cachedNotes = await getNoteshareDataByDateRange(
+          // 모바일에서 네트워크 타임아웃 처리
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('노트 로딩 시간 초과')), 15000);
+          });
+          
+          const notesPromise = getNoteshareDataByDateRange(
             currentUser, 
             currentDateRange.startDate, 
             currentDateRange.endDate
           );
           
-          console.log('서버에서 조회된 노트 수:', cachedNotes.length);
+          cachedNotes = await Promise.race([notesPromise, timeoutPromise]);
+          
+          console.log('📊 서버에서 조회된 노트 수:', cachedNotes.length);
           
           const publishFilter = document.querySelector('input[name="publishFilter"]:checked')?.value || 'published';
           const filteredNotes = applyPublishFilter(cachedNotes, publishFilter);
@@ -664,10 +684,25 @@
           notes = filteredNotes;
           displayNotes(notes);
           
-          console.log('=== 노트 목록 로드 완료 ===');
+          console.log('✅ === 노트 목록 로드 완료 ===');
         } catch (error) {
-          console.error('노트 로드 실패:', error);
-          await customAlert('노트를 불러오는데 실패했습니다.');
+          console.error('❌ 노트 로드 실패:', error);
+          
+          // 모바일 환경에서 더 자세한 오류 처리
+          if (isMobileDevice()) {
+            if (error.message.includes('시간 초과')) {
+              await customAlert('네트워크가 느려 노트를 불러오는데 시간이 오래 걸리고 있습니다. 잠시 후 다시 시도해주세요.');
+            } else {
+              await customAlert('노트를 불러오는데 실패했습니다. 네트워크 연결을 확인해주세요.');
+            }
+          } else {
+            await customAlert('노트를 불러오는데 실패했습니다.');
+          }
+          
+          // 오류 시에도 빈 목록 표시
+          cachedNotes = [];
+          notes = [];
+          displayNotes(notes);
         }
       }
 
@@ -1673,30 +1708,119 @@
         });
       }
 
+      // 모바일 환경 감지 및 오류 처리 강화
+      function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      }
+
+      // 안전한 초기화 함수
+      async function safeInitialize() {
+        try {
+          console.log('📱 모바일 환경에서 안전한 초기화 시작');
+          
+          // Supabase 로딩 확인
+          if (typeof window.supabase === 'undefined') {
+            console.error('❌ Supabase가 로드되지 않았습니다.');
+            showErrorMessage('네트워크 연결을 확인하고 새로고침해주세요.');
+            return;
+          }
+
+          // 1. 직원 정보 캐시 초기화 (가장 먼저)
+          console.log('📋 직원 정보 캐시 초기화...');
+          await initializeEmployeesCache();
+          
+          // 2. parent page에서 사번 가져오기
+          console.log('👤 사용자 정보 가져오기...');
+          await getUserFromParent();
+
+          // 3. 현재 사용자 정보 설정
+          console.log('🔍 사용자 정보 로드...');
+          await loadUserInfo();
+          
+          // 4. 날짜 범위 초기화 및 UI 설정
+          console.log('📅 날짜 범위 초기화...');
+          const dateRange = initializeDateRange();
+          const startDateEl = document.getElementById('searchStartDate');
+          const endDateEl = document.getElementById('searchEndDate');
+          if (startDateEl) startDateEl.value = dateRange.startDate;
+          if (endDateEl) endDateEl.value = dateRange.endDate;
+          
+          // 5. 노트 목록 로드
+          console.log('📝 노트 목록 로드...');
+          await loadNotes();
+
+          // 6. 초기 설정
+          console.log('⚙️ 폼 초기화...');
+          await initializeForm();
+
+          // 7. 이벤트 리스너 등록
+          console.log('🎯 이벤트 리스너 등록...');
+          setupEventListeners();
+
+          console.log('✅ 모바일 환경 초기화 완료');
+          
+        } catch (error) {
+          console.error('💥 초기화 중 오류 발생:', error);
+          showErrorMessage('앱 초기화 중 오류가 발생했습니다. 새로고침을 시도해주세요.');
+        }
+      }
+
+      // 오류 메시지 표시 함수
+      function showErrorMessage(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.8);
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10000;
+          font-family: "Noto Sans KR", sans-serif;
+          text-align: center;
+          padding: 20px;
+          box-sizing: border-box;
+        `;
+        errorDiv.innerHTML = `
+          <div style="background: #fff; color: #333; padding: 20px; border-radius: 10px; max-width: 300px;">
+            <h3 style="color: #e74c3c; margin-bottom: 15px;">⚠️ 오류</h3>
+            <p style="margin-bottom: 15px; line-height: 1.4;">${message}</p>
+            <button onclick="location.reload()" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">새로고침</button>
+          </div>
+        `;
+        document.body.appendChild(errorDiv);
+      }
+
       // 페이지 로드 시 초기화
-      document.addEventListener('DOMContentLoaded', async function() {
-        // 1. 직원 정보 캐시 초기화 (가장 먼저)
-        await initializeEmployeesCache();
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('📱 모바일 페이지 로드 감지');
+        console.log('🌐 User Agent:', navigator.userAgent);
+        console.log('📊 화면 크기:', window.innerWidth + 'x' + window.innerHeight);
+        console.log('🔗 현재 URL:', window.location.href);
+        console.log('🌍 온라인 상태:', navigator.onLine);
         
-        // 2. parent page에서 사번 가져오기
-        await getUserFromParent();
-
-        // 3. 현재 사용자 정보 설정
-        await loadUserInfo();
+        // 네트워크 연결 상태 체크
+        if (!navigator.onLine) {
+          showErrorMessage('인터넷 연결이 없습니다. 네트워크 연결을 확인해주세요.');
+          return;
+        }
         
-        // 4. 날짜 범위 초기화 및 UI 설정
-        const dateRange = initializeDateRange();
-        document.getElementById('searchStartDate').value = dateRange.startDate;
-        document.getElementById('searchEndDate').value = dateRange.endDate;
-        
-        // 5. 노트 목록 로드
-        await loadNotes();
+        // 약간의 지연 후 초기화 (모바일에서 안정성 향상)
+        setTimeout(safeInitialize, 100);
+      });
 
-        // 6. 초기 설정
-        await initializeForm();
+      // 온라인/오프라인 상태 감지
+      window.addEventListener('online', function() {
+        console.log('🌍 네트워크 연결됨');
+      });
 
-        // 7. 이벤트 리스너 등록
-        setupEventListeners();
+      window.addEventListener('offline', function() {
+        console.log('🚫 네트워크 연결 끊어짐');
+        showErrorMessage('인터넷 연결이 끊어졌습니다. 네트워크 연결을 확인해주세요.');
       });
     </script>
   </body>

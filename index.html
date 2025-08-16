@@ -18,8 +18,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <!-- 스크립트 파일 -->
 
-    <script src="./supabase.js"></script>
-    <script type="module" src="https://sclass0614.github.io/authCheck/authCheck.js"></script>
+    <script src="./supabase.js" onerror="console.error('supabase.js 로딩 실패')"></script>
+    <script type="module" src="https://sclass0614.github.io/authCheck/authCheck.js" onerror="console.log('authCheck.js 로딩 실패 - 계속 진행')"></script>
     
     
   </head>
