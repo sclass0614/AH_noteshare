@@ -1292,15 +1292,23 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    position: relative;
+}
+
+/* 모달 바디 헤더 (버튼 컨테이너) */
+.modal-body-header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 15px;
+    flex-shrink: 0;
 }
 
 .content-edit-modal-body textarea {
     width: 100%;
-    height: calc(90vh - 100px); /* 푸터 제거로 높이 증가 */
+    height: calc(90vh - 150px); /* 버튼 헤더 공간 고려 */
     border: 2px solid var(--border-color);
     border-radius: 6px;
-    padding: 16px; /* 일반 패딩으로 복원 */
+    padding: 16px;
     font-size: 14px;
     font-family: "맑은 고딕", "Malgun Gothic", monospace;
     line-height: 1.6;
@@ -1308,6 +1316,7 @@ body {
     outline: none;
     transition: border-color 0.2s ease;
     background-color: #fafafa;
+    flex: 1;
 }
 
 .content-edit-modal-body textarea:focus {
@@ -1316,15 +1325,10 @@ body {
     box-shadow: 0 0 0 3px rgba(35, 81, 53, 0.1);
 }
 
-/* 모달 바디 우측 상단 버튼 컨테이너 */
+/* 버튼 컨테이너 */
 .textarea-buttons {
-    position: absolute;
-    top: 0;
-    right: 0;
     display: flex;
     gap: 10px;
-    z-index: 10;
-    padding: 20px;
 }
 
 /* 텍스트에리어 상단 버튼 스타일 */
@@ -1412,17 +1416,17 @@ body {
         padding: 16px;
     }
     
+    .modal-body-header {
+        padding-bottom: 12px;
+    }
+    
     .content-edit-modal-body textarea {
-        height: calc(95vh - 80px); /* 푸터 제거로 높이 증가 */
-        padding: 12px; /* 일반 패딩으로 복원 */
+        height: calc(95vh - 130px); /* 버튼 헤더 공간 고려 */
+        padding: 12px;
         font-size: 16px; /* iOS 줌 방지 */
     }
     
     .textarea-buttons {
-        top: 0;
-        right: 0;
-        padding: 15px;
-        flex-direction: row;
         gap: 8px;
     }
     
