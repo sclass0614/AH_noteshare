@@ -1300,7 +1300,7 @@ body {
     height: calc(90vh - 100px); /* 푸터 제거로 높이 증가 */
     border: 2px solid var(--border-color);
     border-radius: 6px;
-    padding: 16px 60px 16px 16px; /* 우측에 버튼 공간 확보 */
+    padding: 60px 16px 16px 16px; /* 상단에 버튼 공간 확보 */
     font-size: 14px;
     font-family: "맑은 고딕", "Malgun Gothic", monospace;
     line-height: 1.6;
@@ -1316,55 +1316,61 @@ body {
     box-shadow: 0 0 0 3px rgba(35, 81, 53, 0.1);
 }
 
-/* 텍스트에리어 내부 버튼 컨테이너 */
+/* 텍스트에리어 상단 우측 버튼 컨테이너 */
 .textarea-buttons {
     position: absolute;
-    top: 30px;
-    right: 30px;
+    top: 20px;
+    right: 20px;
     display: flex;
-    gap: 8px;
+    gap: 10px;
     z-index: 10;
 }
 
-/* 텍스트에리어 내부 버튼 스타일 */
+/* 텍스트에리어 상단 버튼 스타일 */
 .textarea-button {
-    padding: 8px 16px;
+    padding: 10px 20px;
     border: none;
-    border-radius: 5px;
-    font-size: 12px;
+    border-radius: 6px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
-    min-width: 60px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    min-width: 80px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    font-family: "Noto Sans KR", "맑은 고딕", "Malgun Gothic", sans-serif;
 }
 
 .textarea-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 .textarea-button:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .textarea-button.cancel-btn {
     background-color: #6c757d;
     color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .textarea-button.cancel-btn:hover {
     background-color: #5a6268;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .textarea-button.save-btn {
     background-color: var(--main-color);
     color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .textarea-button.save-btn:hover {
     background-color: #1a3d28;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* 전체화면 편집 모달 애니메이션 */
@@ -1407,20 +1413,20 @@ body {
     
     .content-edit-modal-body textarea {
         height: calc(95vh - 80px); /* 푸터 제거로 높이 증가 */
-        padding: 12px 50px 12px 12px; /* 우측에 버튼 공간 확보 */
+        padding: 70px 12px 12px 12px; /* 상단에 버튼 공간 확보 */
         font-size: 16px; /* iOS 줌 방지 */
     }
     
     .textarea-buttons {
         top: 25px;
         right: 20px;
-        flex-direction: column;
-        gap: 6px;
+        flex-direction: row;
+        gap: 8px;
     }
     
     .textarea-button {
-        padding: 6px 12px;
-        font-size: 11px;
-        min-width: 50px;
+        padding: 8px 14px;
+        font-size: 12px;
+        min-width: 65px;
     }
 }
