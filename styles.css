@@ -1234,10 +1234,10 @@ body {
 .content-edit-modal-content {
     position: relative;
     background-color: #fefefe;
-    margin: 2% auto;
+    margin: 15% auto;
     width: 80%;
     max-width: 800px;
-    height: 90vh;
+    height: 70vh;
     border-radius: 8px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     display: flex;
@@ -1305,7 +1305,7 @@ body {
 
 .content-edit-modal-body textarea {
     width: 100%;
-    height: calc(90vh - 150px); /* 버튼 헤더 공간 고려 */
+    height: calc(70vh - 150px); /* 버튼 헤더 공간 고려 */
     border: 2px solid var(--border-color);
     border-radius: 6px;
     padding: 16px;
@@ -1398,10 +1398,10 @@ body {
 /* 모바일 대응 - 전체화면 편집 모달 */
 @media (max-width: 768px) {
     .content-edit-modal-content {
-        margin: 1% auto;
+        margin: 15% auto;
         width: 95%;
         max-width: none;
-        height: 95vh;
+        height: 70vh;
     }
     
     .content-edit-modal-header {
@@ -1421,7 +1421,7 @@ body {
     }
     
     .content-edit-modal-body textarea {
-        height: calc(95vh - 130px); /* 버튼 헤더 공간 고려 */
+        height: calc(70vh - 130px); /* 버튼 헤더 공간 고려 */
         padding: 12px;
         font-size: 16px; /* iOS 줌 방지 */
     }
